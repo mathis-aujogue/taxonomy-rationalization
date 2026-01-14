@@ -3,7 +3,7 @@
 
 import pandas as pd
 import sys
-
+import argparse
 
 def convert_xlsx_to_csv(xlsx_file, csv_file):
     """Convert an Excel file to CSV format."""
@@ -23,16 +23,10 @@ def convert_xlsx_to_csv(xlsx_file, csv_file):
 
 
 if __name__ == "__main__":
-    files_to_convert = [
-        ("our_taxonomy.xlsx", "our_taxonomy.csv"),
-        ("their_taxonomy.xlsx", "their_taxonomy.csv"),
-    ]
-
-    success_count = 0
-    for xlsx_file, csv_file in files_to_convert:
-        if convert_xlsx_to_csv(xlsx_file, csv_file):
-            success_count += 1
-
-    print(
-        f"\nConversion complete: {success_count}/{len(files_to_convert)} files converted successfully"
-    )
+    parser = argparse.ArgumentParser(description="Convert Excel files to CSV format.")
+    parser.add_argument("xlsx_file", type=str, help="Path to the Excel file to convert.")
+    args = parser.parse_args()
+    if convert_xlsx_to_csv(args.xlsx_file, f"{args.xlsx_file}.csv"):
+        print(f"\nConversion complete: {args.xlsx_file} converted successfully")
+    else:
+        print(f"\nConversion failed: {args.xlsx_file}")
