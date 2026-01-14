@@ -20,9 +20,9 @@ def load_taxonomy_csv(csv_path: str | Path) -> pd.DataFrame:
         for col in df.columns:
             if "L3" in col.upper():
                 df.rename(columns={col: "CATEGORY L3"}, inplace=True)
-            elif "L2" in col.upper():
+            if "L2" in col.upper():
                 df.rename(columns={col: "CATEGORY L2"}, inplace=True)
-            elif "L1" in col.upper():
+            if "L1" in col.upper():
                 df.rename(columns={col: "CATEGORY L1"}, inplace=True)
 
         if "CATEGORY L3" not in df.columns or "CATEGORY L2" not in df.columns:

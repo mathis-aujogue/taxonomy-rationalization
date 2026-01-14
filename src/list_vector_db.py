@@ -52,6 +52,10 @@ async def list_vector_db_contents():
                 cur.execute(structure_query)
                 columns = cur.fetchall()
 
+        # Check if target_id exists as a separate column (metadata_columns)
+        column_names = [col[0] for col in columns]
+        has_target_id_column = "target_id" in column_names
+
         # Find metadata column (could be 'metadata' or 'cmetadata' or similar)
         metadata_col = None
         for col_name, col_type in columns:
@@ -59,21 +63,31 @@ async def list_vector_db_contents():
                 metadata_col = col_name
                 break
 
-        if not metadata_col:
-            print(f"Could not find metadata column in table '{table_name}'.")
-            print(f"Available columns: {[col[0] for col in columns]}")
+        # Query the database - use target_id column if it exists, otherwise extract from JSON metadata
+        if has_target_id_column:
+            # target_id is stored as a separate column (metadata_columns)
+            query = f"""
+            SELECT 
+                target_id,
+                COUNT(*) as count
+            FROM {table_name}
+            GROUP BY target_id
+            ORDER BY count DESC;
+            """
+        elif metadata_col:
+            # Fallback: extract from JSON metadata column
+            query = f"""
+            SELECT 
+                {metadata_col}->>'target_id' as target_id,
+                COUNT(*) as count
+            FROM {table_name}
+            GROUP BY {metadata_col}->>'target_id'
+            ORDER BY count DESC;
+            """
+        else:
+            print(f"Could not find target_id column or metadata column in table '{table_name}'.")
+            print(f"Available columns: {column_names}")
             return
-
-        # Query the database - use JSON extraction directly instead of grouping by JSON
-        # This avoids the "could not identify an equality operator for type json" error
-        query = f"""
-        SELECT 
-            {metadata_col}->>'target_id' as target_id,
-            COUNT(*) as count
-        FROM {table_name}
-        GROUP BY {metadata_col}->>'target_id'
-        ORDER BY count DESC;
-        """
 
         # Use sync connection pool for querying
         with services.connection_pool.connection() as conn:
@@ -103,7 +117,7 @@ async def list_vector_db_contents():
         # Print SHQ taxonomy stats
         if "shq" in taxonomy_stats:
             shq_total = taxonomy_stats["shq"]
-            print(f"SHQ Taxonomy (target_id='shq'):")
+            print("SHQ Taxonomy (target_id='shq'):")
             print(f"  Total embeddings: {shq_total}")
             print()
 
@@ -113,7 +127,7 @@ async def list_vector_db_contents():
         }
         if client_stats:
             client_total = sum(client_stats.values())
-            print(f"Client Taxonomies:")
+            print("Client Taxonomies:")
             print(f"  Total embeddings: {client_total}")
             print(f"  Number of clients: {len(client_stats)}")
             print()
@@ -129,7 +143,7 @@ async def list_vector_db_contents():
         if "unknown" in taxonomy_stats:
             unknown_total = taxonomy_stats["unknown"]
             if unknown_total > 0:
-                print(f"Unknown/Other (target_id not set):")
+                print("Unknown/Other (target_id not set):")
                 print(f"  Total embeddings: {unknown_total}")
                 print()
 
@@ -139,14 +153,24 @@ async def list_vector_db_contents():
         print("=" * 80)
 
         # Query for more details
-        detail_query = f"""
-        SELECT 
-            {metadata_col}->>'target_id' as target_id,
-            COUNT(*) as count
-        FROM {table_name}
-        GROUP BY {metadata_col}->>'target_id'
-        ORDER BY target_id;
-        """
+        if has_target_id_column:
+            detail_query = f"""
+            SELECT 
+                target_id,
+                COUNT(*) as count
+            FROM {table_name}
+            GROUP BY target_id
+            ORDER BY target_id;
+            """
+        else:
+            detail_query = f"""
+            SELECT 
+                {metadata_col}->>'target_id' as target_id,
+                COUNT(*) as count
+            FROM {table_name}
+            GROUP BY {metadata_col}->>'target_id'
+            ORDER BY target_id;
+            """
 
         with services.connection_pool.connection() as conn:
             with conn.cursor() as cur:
@@ -171,21 +195,41 @@ async def list_vector_db_contents():
                 content_col = col_name
                 break
 
-        if content_col:
-            sample_query = f"""
-            SELECT 
-                {metadata_col},
-                LEFT({content_col}, 100) as content_preview
-            FROM {table_name}
-            LIMIT 5;
-            """
+        # Build sample query - include target_id if it's a separate column
+        if has_target_id_column:
+            if content_col:
+                sample_query = f"""
+                SELECT 
+                    target_id,
+                    {metadata_col if metadata_col else 'NULL'} as metadata,
+                    LEFT({content_col}, 100) as content_preview
+                FROM {table_name}
+                LIMIT 5;
+                """
+            else:
+                sample_query = f"""
+                SELECT 
+                    target_id,
+                    {metadata_col if metadata_col else 'NULL'} as metadata
+                FROM {table_name}
+                LIMIT 5;
+                """
         else:
-            sample_query = f"""
-            SELECT 
-                {metadata_col}
-            FROM {table_name}
-            LIMIT 5;
-            """
+            if content_col:
+                sample_query = f"""
+                SELECT 
+                    {metadata_col},
+                    LEFT({content_col}, 100) as content_preview
+                FROM {table_name}
+                LIMIT 5;
+                """
+            else:
+                sample_query = f"""
+                SELECT 
+                    {metadata_col}
+                FROM {table_name}
+                LIMIT 5;
+                """
 
         with services.connection_pool.connection() as conn:
             with conn.cursor() as cur:
@@ -193,14 +237,23 @@ async def list_vector_db_contents():
                 sample_results = cur.fetchall()
 
         for idx, row in enumerate(sample_results, 1):
-            if content_col:
-                metadata_json, content_preview = row
+            # Parse row structure based on query structure
+            if has_target_id_column:
+                target_id_val = row[0]
+                metadata_json = row[1] if len(row) > 1 else None
+                content_preview = row[2] if len(row) > 2 else None
             else:
-                metadata_json = row[0]
-                content_preview = None
+                target_id_val = None
+                if content_col:
+                    metadata_json, content_preview = row
+                else:
+                    metadata_json = row[0]
+                    content_preview = None
 
             # Handle different metadata formats
-            if isinstance(metadata_json, dict):
+            if metadata_json is None:
+                metadata = {}
+            elif isinstance(metadata_json, dict):
                 metadata = metadata_json
             elif isinstance(metadata_json, str):
                 try:
@@ -211,9 +264,12 @@ async def list_vector_db_contents():
                 metadata = {}
 
             print(f"\nRecord {idx}:")
+            if has_target_id_column and target_id_val:
+                print(f"  Target ID: {target_id_val}")
             if content_preview:
                 print(f"  Content: {content_preview}...")
-            print(f"  Metadata: {json.dumps(metadata, indent=4)}")
+            if metadata:
+                print(f"  Metadata: {json.dumps(metadata, indent=4)}")
 
     except Exception as e:
         print(f"Error querying database: {e}")

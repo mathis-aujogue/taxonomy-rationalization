@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import Dict
 from langchain_core.documents import Document
 from lib.services import TaxonomyServices
+from utils.config.constants import constants
 from utils.data.data_loader import load_taxonomy_csv
-from utils.ui.progress import setup_logging, create_progress_bar
+from utils.ui.progress import setup_logging
 from utils.ai.content_builder import build_page_content
 
 
@@ -70,7 +71,7 @@ async def ingest_taxonomy(
     # Create documents using unified logic
     print("Creating documents...")
     documents = []
-    for _, row in taxonomy.iterrows():
+    for index, row in taxonomy.iterrows():
         fields = extract_taxonomy_fields(row)
         page_content = build_page_content(fields)
 
@@ -82,17 +83,20 @@ async def ingest_taxonomy(
 
     # Store embeddings in vectorstore
     if services.vectorstore:
+        if clear_existing:
+            table_name = constants.TAXONOMY_EMBEDDINGS_TABLE_NAME
+            delete_query = f'DELETE FROM "{table_name}" WHERE target_id = %s'
+            
+            # Use sync connection pool for deletion
+            with services.connection_pool.connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(delete_query, (target_id,))
+                    deleted_count = cur.rowcount
+            
+            print(f"Cleared {deleted_count} existing embeddings for target ID: {target_id}")
         print(f"Ingesting {len(documents)} documents into vectorstore...")
-        progress_bar = create_progress_bar(len(documents), "Ingesting embeddings")
+        await services.vectorstore.aadd_documents(documents)
 
-        # Add documents in batches to show progress
-        batch_size = 50
-        for i in range(0, len(documents), batch_size):
-            batch = documents[i : i + batch_size]
-            await services.vectorstore.aadd_documents(batch)
-            progress_bar.update(len(batch))
-
-        progress_bar.close()
         print(
             f"Successfully ingested {len(documents)} taxonomy embeddings into vectorstore"
         )
@@ -108,7 +112,7 @@ async def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Ingest taxonomy into the vector database. "
-        "If --target-id is provided, uses that identifier. "
+        "If --id is provided, uses that identifier. "
         "Otherwise, uses 'shq' for SHQ taxonomy."
     )
 
@@ -121,9 +125,8 @@ async def main():
 
     # Target ID
     parser.add_argument(
-        "--target-id",
+        "--id",
         type=str,
-        default=None,
         help="Target identifier. If not provided, defaults to 'shq' for SHQ taxonomy.",
     )
 
@@ -132,14 +135,14 @@ async def main():
         "--clear",
         action="store_true",
         help="Clear existing embeddings before ingesting (requires manual table drop). "
-        "Only used when --target-id is not provided (shq taxonomy)",
+        "Only used when --id is not provided (shq taxonomy)",
     )
 
     args = parser.parse_args()
 
     await ingest_taxonomy(
         csv_path=args.csv_path,
-        target_id=args.target_id,
+        target_id=args.id,
         clear_existing=args.clear,
     )
 

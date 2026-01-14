@@ -3,6 +3,8 @@
 import asyncio
 import argparse
 import time
+import json
+import numpy as np
 from lib.services import TaxonomyServices
 from utils.data.data_loader import load_taxonomy_csv
 from utils.ai.threshold_detection import calculate_confidence_score
@@ -13,10 +15,179 @@ from utils.output.output_handler import (
     generate_summary_statistics,
 )
 from utils.ai.content_builder import build_page_content
+from utils.config.constants import constants
 from ingest_taxonomy import extract_taxonomy_fields
 from pathlib import Path
 from datetime import datetime
-from typing import Any
+from typing import Any, List, Dict
+
+
+async def _retrieve_embeddings_by_target_id(
+    services: TaxonomyServices, target_id: str
+) -> List[Dict[str, Any]]:
+    """
+    Retrieve embeddings from the vector database for a specific target_id.
+    
+    Returns a list of dictionaries containing:
+    - embedding: numpy array of the embedding vector
+    - metadata: dictionary with l1, l2, l3, definition, etc.
+    - content: page content string
+    """
+    table_name = constants.TAXONOMY_EMBEDDINGS_TABLE_NAME
+    embeddings_list = []
+    
+    # First, detect column names dynamically
+    structure_query = f"""
+    SELECT column_name, data_type 
+    FROM information_schema.columns 
+    WHERE table_name = '{table_name}'
+    ORDER BY ordinal_position;
+    """
+    
+    with services.connection_pool.connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(structure_query)
+            columns = cur.fetchall()
+    
+    column_names = [col[0] for col in columns]
+    
+    # Find embedding/vector column (could be 'embedding', 'vector', etc.)
+    embedding_col = None
+    for col_name in column_names:
+        if col_name.lower() in ['embedding', 'vector']:
+            embedding_col = col_name
+            break
+    
+    if not embedding_col:
+        raise ValueError(
+            f"Could not find embedding/vector column in table '{table_name}'. "
+            f"Available columns: {column_names}"
+        )
+    
+    # Find metadata column
+    metadata_col = None
+    for col_name in column_names:
+        if "metadata" in col_name.lower():
+            metadata_col = col_name
+            break
+    
+    # Find content column
+    content_col = None
+    for col_name in column_names:
+        if col_name.lower() in ['page_content', 'content']:
+            content_col = col_name
+            break
+    
+    # Build query
+    select_cols = [embedding_col]
+    if metadata_col:
+        select_cols.append(metadata_col)
+    if content_col:
+        select_cols.append(content_col)
+    
+    query = f"""
+    SELECT {', '.join(select_cols)}
+    FROM {table_name}
+    WHERE target_id = %s;
+    """
+    
+    with services.connection_pool.connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (target_id,))
+            results = cur.fetchall()
+    
+    for row in results:
+        embedding_vector = row[0]
+        metadata_json = row[1] if metadata_col and len(row) > 1 else None
+        content = row[-1] if content_col and len(row) > (2 if metadata_col else 1) else None
+        
+        # Parse metadata
+        if metadata_json is None:
+            metadata = {}
+        elif isinstance(metadata_json, dict):
+            metadata = metadata_json
+        elif isinstance(metadata_json, str):
+            try:
+                metadata = json.loads(metadata_json)
+            except json.JSONDecodeError:
+                metadata = {}
+        else:
+            metadata = {}
+        
+        # Convert embedding vector to numpy array
+        # Handle different vector types (pgvector returns different formats)
+        if isinstance(embedding_vector, str):
+            # Parse string representation (pgvector may return as string)
+            try:
+                # Try parsing as JSON array string like "[1.0, 2.0, 3.0]"
+                embedding_array = np.array(json.loads(embedding_vector), dtype=np.float32)
+            except (json.JSONDecodeError, ValueError):
+                # Try parsing pgvector format (space-separated or comma-separated)
+                # Remove brackets if present and split
+                cleaned = embedding_vector.strip('[]')
+                # Try comma-separated first
+                if ',' in cleaned:
+                    parts = cleaned.split(',')
+                else:
+                    # Space-separated (pgvector default text format)
+                    parts = cleaned.split()
+                try:
+                    embedding_array = np.array([float(x.strip()) for x in parts], dtype=np.float32)
+                except (ValueError, TypeError) as e:
+                    raise ValueError(
+                        f"Could not parse embedding vector string. "
+                        f"Format: {embedding_vector[:200] if len(embedding_vector) > 200 else embedding_vector}, "
+                        f"Error: {e}"
+                    )
+        elif hasattr(embedding_vector, '__array__'):
+            embedding_array = np.array(embedding_vector.__array__(), dtype=np.float32)
+        elif isinstance(embedding_vector, (list, tuple)):
+            embedding_array = np.array(embedding_vector, dtype=np.float32)
+        elif hasattr(embedding_vector, 'tolist'):
+            embedding_array = np.array(embedding_vector.tolist(), dtype=np.float32)
+        else:
+            # Try to convert directly
+            try:
+                embedding_array = np.array(embedding_vector, dtype=np.float32)
+            except Exception:
+                raise ValueError(
+                    f"Could not convert embedding vector to numpy array. "
+                    f"Type: {type(embedding_vector)}, Value: {str(embedding_vector)[:100]}"
+                )
+        
+        embeddings_list.append({
+            "embedding": embedding_array,
+            "metadata": metadata,
+            "content": content or "",
+        })
+    
+    return embeddings_list
+
+
+def _find_matching_embedding(
+    fields: Dict[str, str], embeddings_list: List[Dict[str, Any]]
+) -> Dict[str, Any] | None:
+    """
+    Find the matching embedding for a given taxonomy row by comparing metadata.
+    
+    Matches by comparing l1, l2, l3 fields.
+    """
+    for emb in embeddings_list:
+        metadata = emb["metadata"]
+        # Try to match by l3 first (most specific), then l2, then l1
+        if (
+            metadata.get("l3", "").strip().lower() == fields.get("l3", "").strip().lower()
+            and metadata.get("l2", "").strip().lower() == fields.get("l2", "").strip().lower()
+        ):
+            return emb
+        # Fallback: match by content if available
+        if emb.get("content"):
+            expected_content = build_page_content(fields)
+            if emb["content"].strip() == expected_content.strip():
+                return emb
+    
+    return None
+
 
 async def main():
     """Main function for embeddings-based matching."""
@@ -28,6 +199,12 @@ async def main():
         type=str,
         help="Path to client taxonomy CSV file",
     )
+    parser.add_argument(
+        "--id",
+        type=str,
+        help="Target identifier. Uses embeddings in db instead of recreating them.",
+    )
+
 
     args = parser.parse_args()
 
@@ -47,6 +224,15 @@ async def main():
     # Note: Embeddings should be ingested separately using ingest_taxonomy.py
     # This script assumes embeddings are already in the vectorstore
 
+    # If target_id is provided, retrieve embeddings from DB
+    target_id_embeddings = None
+    if args.id:
+        print(f"Retrieving embeddings for target_id '{args.id}' from database...")
+        target_id_embeddings = await _retrieve_embeddings_by_target_id(
+            services, args.id
+        )
+        print(f"Retrieved {len(target_id_embeddings)} embeddings for target_id '{args.id}'")
+
     # Match client taxonomy categories
     print("Matching categories...")
     matches = []
@@ -60,11 +246,37 @@ async def main():
 
         # Search for similar categories
         if services.vectorstore:
-            results = await services.vectorstore.asimilarity_search_with_score(
-                query_text,
-                k=5,
-                filter={"target_id": "shq"},
-            )
+            if target_id_embeddings:
+                # Use pre-existing embeddings from DB
+                # Find matching embedding for this row
+                matching_embedding = _find_matching_embedding(
+                    fields, target_id_embeddings
+                )
+                if matching_embedding:
+                    # Use asimilarity_search_with_score_by_vector
+                    # Convert numpy array to list if needed (some vectorstores expect lists)
+                    embedding_vector = matching_embedding["embedding"]
+                    if isinstance(embedding_vector, np.ndarray):
+                        embedding_vector = embedding_vector.tolist()
+                    results = await services.vectorstore.asimilarity_search_with_score_by_vector(
+                        embedding_vector,
+                        k=5,
+                        filter={"target_id": "shq"},
+                    )
+                else:
+                    # Fallback: create embedding on the fly if no match found
+                    results = await services.vectorstore.asimilarity_search_with_score(
+                        query_text,
+                        k=5,
+                        filter={"target_id": "shq"},
+                    )
+            else:
+                # Create embeddings on the fly (original behavior)
+                results = await services.vectorstore.asimilarity_search_with_score(
+                    query_text,
+                    k=5,
+                    filter={"target_id": "shq"},
+                )
             # Get top-k candidates
             top_k = min(5, len(results))
             candidates = []
