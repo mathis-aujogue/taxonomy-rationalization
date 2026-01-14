@@ -1,0 +1,213 @@
+DATA_SOURCE,COMMODITY_L1,COMMODITY_L2,COMMODITY_L3,GDW_SUBCATEGORY,SUM(AMOUNT)
+ZALANDO,(Corporate) Property,Facility Management,Canteen Services,0,11627710.1751421
+ZALANDO,(Corporate) Property,Facility Management,Cleaning Services and goods,0,21825940.2459073
+ZALANDO,(Corporate) Property,Facility Management,Maintenance Services,0,15420391.8224925
+ZALANDO,(Corporate) Property,Facility Management,Other FM services and goods,0,23731122.1740905
+ZALANDO,(Corporate) Property,Facility Management,Security Goods,0,3056234.41113765
+ZALANDO,(Corporate) Property,Facility Management,Security Services,0,28392593.2546262
+ZALANDO,(Corporate) Property,Real Estate,"Architecture, interior design and project management service",0,4087168.28199484
+ZALANDO,(Corporate) Property,Real Estate,Construction Material (w/o services),0,3072295.61261245
+ZALANDO,(Corporate) Property,Real Estate,Construction Works (300),0,13498056.3532199
+ZALANDO,(Corporate) Property,Real Estate,Infrastructure Appraisal/Inspections,0,137880.199524376
+ZALANDO,(Corporate) Property,Real Estate,MEP Other Works,0,45793212.8912757
+ZALANDO,(Corporate) Property,Real Estate,MEP Works Electric (440),0,11885960.4373444
+ZALANDO,(Corporate) Property,Real Estate,MEP Works HVAC ventilation (430),0,2377647.13342749
+ZALANDO,(Corporate) Property,Real Estate,MEP Works Sprinkler (470),0,2960301.10047586
+ZALANDO,(Corporate) Property,Rent (incl. auxiliary expenses),Event Location rent,0,507097.390116076
+ZALANDO,(Corporate) Property,Rent (incl. auxiliary expenses),Office Rent,0,14651936.6769859
+ZALANDO,(Corporate) Property,Rent (incl. auxiliary expenses),Other Rent,0,15906865.0386232
+ZALANDO,(Corporate) Property,Rent (incl. auxiliary expenses),Residential Rent,0,35034.344744674
+ZALANDO,(Corporate) Property,Rent (incl. auxiliary expenses),Shop/Outlet/Showroom Rent,0,-27049.923665076
+ZALANDO,(Corporate) Property,Rent (incl. auxiliary expenses),Warehouse Rent,0,69813029.5580066
+ZALANDO,(Corporate) Property,Utilities,Carbon Offsetting,0,-1404682.19654868
+ZALANDO,(Corporate) Property,Utilities,Electricity,0,58325075.6499187
+ZALANDO,(Corporate) Property,Utilities,Gas,0,4002313.22421642
+ZALANDO,(Corporate) Property,Utilities,Other Utility Expenses,0,520781.255344556
+ZALANDO,(Corporate) Property,Utilities,Regulatory waste/recycling fees,0,490331.251611912
+ZALANDO,(Corporate) Property,Utilities,Waste disposal/recycling,0,15016861.74822
+ZALANDO,Employee Services,Building furnishing,Office Furniture,0,2880498.23210496
+ZALANDO,Employee Services,Building furnishing,Other Building Furnishing,0,4600305.18843806
+ZALANDO,Employee Services,Business Travel & Fleet Management,"Local Transport (Taxi, public transport, shuttle)",0,18225054.8687812
+ZALANDO,Employee Services,Business Travel & Fleet Management,Other Fleetmanagement,0,56817.90651525
+ZALANDO,Employee Services,Business Travel & Fleet Management,Rental cars,0,269109.122843023
+ZALANDO,Employee Services,Business Travel & Fleet Management,Travel agencies and systems,0,1586086.61084297
+ZALANDO,Employee Services,Business Travel & Fleet Management,Vehicle leasing,0,1310316.86134385
+ZALANDO,Employee Services,Food & Drinks,Food & Drink Consumables,0,5728765.74058288
+ZALANDO,Employee Services,Food & Drinks,Food & Drink Equipment,0,686708.957470281
+ZALANDO,Employee Services,Health & Safety,Health & Safety Equipment,0,695130.857695312
+ZALANDO,Employee Services,Health & Safety,Health & Safety Services,0,4216924.4329465
+ZALANDO,Employee Services,Health & Safety,Workwear & PPE,0,3264609.72052311
+ZALANDO,Employee Services,Industrial Consumables,C Parts,0,903702.515057398
+ZALANDO,Employee Services,Industrial Consumables,Tools,0,222355.187615786
+ZALANDO,Employee Services,Learning & Development services,Coaching,0,1506696.13831563
+ZALANDO,Employee Services,Learning & Development services,Training,0,7461554.68479899
+ZALANDO,Employee Services,Office supplies,Other office supplies,0,1391202.62512805
+ZALANDO,Employee Services,Office supplies,Postage,0,966714.899203446
+ZALANDO,Employee Services,Office supplies,Stationery,0,2915155.80961891
+ZALANDO,IT Hardware,IT Hardware & Infrastructure Goods,"Computers, screens, phones, media equipment",0,5180364.49700163
+ZALANDO,IT Hardware,IT Hardware & Infrastructure Goods,IT supplies,0,2443813.84101788
+ZALANDO,IT Hardware,IT Hardware & Infrastructure Goods,"Printers, copiers, scanners and consumables",0,2448446.90968871
+ZALANDO,IT Hardware,IT Hardware & Infrastructure Goods,"Servers, storages, network components",0,4264261.26127886
+ZALANDO,IT Hardware,IT Hardware & Infrastructure Services,Data Centre / Colocation Services,0,1595952.98489897
+ZALANDO,IT Hardware,IT Hardware & Infrastructure Services,Device as a Service (DaaS),0,5714672.67736255
+ZALANDO,IT Hardware,IT Hardware & Infrastructure Services,"IT Hardware Maintenance, services and repairs",0,6155520.58747898
+ZALANDO,IT Hardware,IT Hardware & Infrastructure Services,Platform / Infrastructure as a Service (PaaS / IaaS),0,86620943.5285129
+ZALANDO,IT Hardware,"Telephony, Data Lines & Communication Services",Data lines,0,2043740.48188652
+ZALANDO,IT Hardware,"Telephony, Data Lines & Communication Services",Landline telephony,0,5076189.85332686
+ZALANDO,IT Hardware,"Telephony, Data Lines & Communication Services",Mobile connectivity,0,1172524.07852557
+ZALANDO,IT Hardware,"Telephony, Data Lines & Communication Services",One time network connection cost,0,73120.016466014
+ZALANDO,Media & Marketing,Content Production,External Content Creation,0,42666755.2188046
+ZALANDO,Media & Marketing,Content Production,Other Content Production,0,3685541.52818801
+ZALANDO,Media & Marketing,Content Production,Production Equipment,0,768419.552534725
+ZALANDO,Media & Marketing,Content Production,Production Location,0,393545.010788112
+ZALANDO,Media & Marketing,Creative Agencies & Campaign Production,,0,138817191.186631
+ZALANDO,Media & Marketing,Event Management,Event Catering,0,4872084.57639209
+ZALANDO,Media & Marketing,Event Management,Event Locations,0,1405959.88768098
+ZALANDO,Media & Marketing,Event Management,Event Management & Production Services,0,4447393.40211036
+ZALANDO,Media & Marketing,Event Management,Internal Events,0,436023.572878338
+ZALANDO,Media & Marketing,Event Management,Other event services,0,4118626.39888549
+ZALANDO,Media & Marketing,Event Management,Technical Event Equipment,0,986425.638605709
+ZALANDO,Media & Marketing,External Workforce - Art Buying,Celebrities & Actors,0,128857.875362492
+ZALANDO,Media & Marketing,External Workforce - Art Buying,Hair & Make up,0,2048660.63967055
+ZALANDO,Media & Marketing,External Workforce - Art Buying,Models,0,13461089.9434513
+ZALANDO,Media & Marketing,External Workforce - Art Buying,Other Art Buying,0,2990683.87217218
+ZALANDO,Media & Marketing,External Workforce - Art Buying,Photographers,0,4481823.51959566
+ZALANDO,Media & Marketing,External Workforce - Art Buying,Stylists,0,1913795.35823801
+ZALANDO,Media & Marketing,Influencer Marketing,,0,44275332.6852975
+ZALANDO,Media & Marketing,Media Buying Offline,D(OOH),0,56793159.2835925
+ZALANDO,Media & Marketing,Media Buying Offline,Digital Radio,0,3388117.09183825
+ZALANDO,Media & Marketing,Media Buying Offline,Digital TV,0,6862204.18971611
+ZALANDO,Media & Marketing,Media Buying Offline,Other Media Buying Offline,0,6127421.32100528
+ZALANDO,Media & Marketing,Media Buying Offline,Print Ads,0,915141.955325917
+ZALANDO,Media & Marketing,Media Buying Offline,Radio,0,23518651.1603938
+ZALANDO,Media & Marketing,Media Buying Offline,TV,0,97783175.9434343
+ZALANDO,Media & Marketing,Media Buying Online,Affiliate,0,17687090.916959
+ZALANDO,Media & Marketing,Media Buying Online,Direct Deals,0,8155397.12844662
+ZALANDO,Media & Marketing,Media Buying Online,Paid Social Media,0,473835527.4213
+ZALANDO,Media & Marketing,Media Buying Online,Programmatic Display,0,122890827.483948
+ZALANDO,Media & Marketing,Print services,Branded/Printed Items,0,378373.837707044
+ZALANDO,Media & Marketing,Print services,Parcel Inserts & Offline Mailings (Production & Shipping),0,139993.469390423
+ZALANDO,Media & Marketing,Print services,"Posters, Flyer, Brochures and Business Cards",0,1857863.19842578
+ZALANDO,Media & Marketing,Public Relations,Corporate PR & Corp. Events,0,5557627.57987282
+ZALANDO,Media & Marketing,Public Relations,Fashion PR & Consumer Events,0,19627284.7630568
+ZALANDO,Media & Marketing,Public Relations,Other PR services,0,1639021.14489066
+ZALANDO,Media & Marketing,Public Relations,Public Affairs,0,3631376.01922153
+ZALANDO,Media & Marketing,Search Engine Marketing,SEA,0,850008207.324624
+ZALANDO,Media & Marketing,Search Engine Marketing,SEO,0,2553205.30683676
+ZALANDO,Media & Marketing,Social Media,Owned Social Media,0,15673631.7313851
+ZALANDO,Media & Marketing,Social Media,Paid Media Collaborations,0,366402.683630571
+ZALANDO,Media & Marketing,Tools & Research,AdTech Tools,0,12887312.1049341
+ZALANDO,Media & Marketing,Tools & Research,Research & Analytics,0,9329482.4064226
+ZALANDO,Packaging,Cardboard Boxes,Intralogistics,0,46236053.0901586
+ZALANDO,Packaging,Cardboard Boxes,Other Boxes,0,776845.057123925
+ZALANDO,Packaging,Cardboard Boxes,Shipping Box,0,40472443.0593833
+ZALANDO,Packaging,Cardboard Boxes,Spare Box,0,2046549.44278894
+ZALANDO,Packaging,Cardboard Boxes,Stow Box,0,616534.221222945
+ZALANDO,Packaging,Equipment & Auxiliar,Auxiliar Packaging,0,49166.983784405
+ZALANDO,Packaging,Equipment & Auxiliar,Packaging Equipment,0,486211.324209363
+ZALANDO,Packaging,Labels,Label,0,3170710.31962493
+ZALANDO,Packaging,Miscellaneuos,Delivery slip,0,3644.079659678
+ZALANDO,Packaging,Miscellaneuos,Hangers,0,87194.524821213
+ZALANDO,Packaging,Miscellaneuos,Miscellaneous Others,0,5747956.58753296
+ZALANDO,Packaging,Miscellaneuos,shoe refurbishment,0,947907.67983093
+ZALANDO,Packaging,Miscellaneuos,textile refurbishment,0,362785.411017476
+ZALANDO,Packaging,Paper Bag,Paper Beauty Bag,0,2284.889258218
+ZALANDO,Packaging,Paper Bag,Paper shipping bag,0,44454379.0346513
+ZALANDO,Packaging,Plastic Bag,Polybag,0,8169900.86019327
+ZALANDO,Packaging,Plastic Bag,Shipping Bags,0,2047252.55054059
+ZALANDO,Payments & Corporate Services,Consulting & Advisory,Financial Advisory & Financial Audits,0,4007025.48177708
+ZALANDO,Payments & Corporate Services,Consulting & Advisory,Legal Patents & IP Rights,0,548600.501470604
+ZALANDO,Payments & Corporate Services,Consulting & Advisory,Legal Services & Advisory,0,34312248.9470553
+ZALANDO,Payments & Corporate Services,Consulting & Advisory,Logistics & Operations Consulting,0,9567089.62449406
+ZALANDO,Payments & Corporate Services,Consulting & Advisory,Management & Business Consulting,0,5525646.80124755
+ZALANDO,Payments & Corporate Services,Consulting & Advisory,Other Consulting,0,6315617.09857779
+ZALANDO,Payments & Corporate Services,Consulting & Advisory,Tax Compliance,0,2193991.97673238
+ZALANDO,Payments & Corporate Services,Consulting & Advisory,Tax Services & Advisory,0,4864801.34965373
+ZALANDO,Payments & Corporate Services,Customer & Partner Services,Customer Care Services,0,132605574.077575
+ZALANDO,Payments & Corporate Services,Customer & Partner Services,Partner Care Services,0,8233972.76051264
+ZALANDO,Payments & Corporate Services,External Workforce - Freelancing,Freelancing (creative),0,8085410.61625857
+ZALANDO,Payments & Corporate Services,External Workforce - Freelancing,Freelancing (non-creative),0,17930941.4010998
+ZALANDO,Payments & Corporate Services,External Workforce - Temporary Labour,Office & Executive Temp Labour,0,6847704.5321643
+ZALANDO,Payments & Corporate Services,External Workforce - Temporary Labour,Store Temp Labour,0,402271.54299983
+ZALANDO,Payments & Corporate Services,External Workforce - Temporary Labour,Warehouse Temp Labour,0,130032783.654702
+ZALANDO,Payments & Corporate Services,Gift Cards,Gift Cards - Production,0,80167.991671097
+ZALANDO,Payments & Corporate Services,Gift Cards,Gift Cards - Resell Services & Commissions,0,-209844246.862054
+ZALANDO,Payments & Corporate Services,Gift Cards,Gift Cards Production,0,9622646.67368079
+ZALANDO,Payments & Corporate Services,Insurance / Association & membership,Fees for Associations & Memberships,0,25601610.8277664
+ZALANDO,Payments & Corporate Services,Insurance / Association & membership,Insurances,0,18973756.7116331
+ZALANDO,Payments & Corporate Services,"Non-Financial Audits, Appraisals and Technical Inspections","Compliance Services, Certifications & Appraisals",0,76841.905005375
+ZALANDO,Payments & Corporate Services,"Non-Financial Audits, Appraisals and Technical Inspections",Non-Financial Audits,0,1569544.80470435
+ZALANDO,Payments & Corporate Services,"Non-Financial Audits, Appraisals and Technical Inspections",Product testing and compliance services,0,3455654.11327193
+ZALANDO,Payments & Corporate Services,"Non-Financial Audits, Appraisals and Technical Inspections",Technical inspections,0,389911.483407672
+ZALANDO,Payments & Corporate Services,P&O Services,Employee Relocation Services,0,2091257.82460303
+ZALANDO,Payments & Corporate Services,P&O Services,Executive Headhunting,0,819499.822197769
+ZALANDO,Payments & Corporate Services,P&O Services,Non-Executive Headhunting,0,2331376.26015457
+ZALANDO,Payments & Corporate Services,P&O Services,Other P&O Services,0,2908699.69231122
+ZALANDO,Payments & Corporate Services,P&O Services,Payroll Services,0,454949.143142287
+ZALANDO,Payments & Corporate Services,Payments Services,Collection Services,0,2502357.97269645
+ZALANDO,Payments & Corporate Services,Payments Services,Credit Card Acquiring,0,31659267.8722354
+ZALANDO,Payments & Corporate Services,Payments Services,"Customer Solvency, Risk & Fraud Prevention Services",0,4549076.473221
+ZALANDO,Payments & Corporate Services,Payments Services,Dunning Services,0,-45380637.7710773
+ZALANDO,Payments & Corporate Services,Payments Services,"Partner Solvency, Risk & Fraud Prevention Services",0,718074.265185629
+ZALANDO,Payments & Corporate Services,Payments Services,Payment Processing Services,0,18390825.1964139
+ZALANDO,Payments & Corporate Services,Translation Services,Interpreting,0,63302.723250779
+ZALANDO,Payments & Corporate Services,Translation Services,"Translations (text, dubbing, localisation, other)",0,8720991.74288256
+ZALANDO,Payments & Corporate Services,Treasury and Financing Services,Cash Management,0,20708001.6032911
+ZALANDO,Payments & Corporate Services,Treasury and Financing Services,Financing Business,0,979120.72900914
+ZALANDO,Payments & Corporate Services,Treasury and Financing Services,Risk Management,0,19392.364943265
+ZALANDO,Software & IT Services,IT Consulting,IT Process Consulting,0,3144767.8830745
+ZALANDO,Software & IT Services,IT Consulting,Other IT Consulting,0,72152680.14665
+ZALANDO,Software & IT Services,IT Consulting,Software related Training,0,260508.73780951
+ZALANDO,Software & IT Services,IT Services,Domains,0,256466.590245921
+ZALANDO,Software & IT Services,IT Services,IT Service Outsourcing,0,289332.301621855
+ZALANDO,Software & IT Services,IT Services,Other IT Services,0,17773897.3044061
+ZALANDO,Software & IT Services,IT Services,Software Engineering and Implementation,0,36028883.731787
+ZALANDO,Software & IT Services,IT Services,Software related Support,0,4602782.87794115
+ZALANDO,Software & IT Services,Software,Customer/ Partner Facing Software (Subscriptions),0,19273762.9800299
+ZALANDO,Software & IT Services,Software,Data Managment Software (Subscriptions),0,7678072.63598547
+ZALANDO,Software & IT Services,Software,Engineering Software (Subscription),0,17559018.0360361
+ZALANDO,Software & IT Services,Software,ERP Corporate Governance & Finance Software (Subscriptions),0,3942361.01906297
+ZALANDO,Software & IT Services,Software,Fonts,0,480410.581544861
+ZALANDO,Software & IT Services,Software,HR Software (Subscriptions),0,2291756.50136106
+ZALANDO,Software & IT Services,Software,Licenses (Perpetual),0,1453675.0109202
+ZALANDO,Software & IT Services,Software,Logistics Software (Subsciptions),0,3619988.25006552
+ZALANDO,Software & IT Services,Software,Maintenance for Perpetual Licenses,0,11619425.1267991
+ZALANDO,Software & IT Services,Software,Other Software,0,147231271.363478
+ZALANDO,Software & IT Services,Software,Workplace Productivity Software (Subscriptions),0,18088046.1616811
+ZALANDO,Transportation Services,Inbound/First Mile,Ocean & Air Freight,0,25703.019787536
+ZALANDO,Transportation Services,Inbound/First Mile,Road Freight,0,1915.36928382
+ZALANDO,Transportation Services,Last Mile,Outbound CEP,0,28349375.3579028
+ZALANDO,Transportation Services,Linehaul/Middle Mile,Pallet Management,0,83285.689987571
+ZALANDO,Transportation Services,Linehaul/Middle Mile,Transport Linehaul,0,1132.58223356
+ZALANDO,Transportation Services,Logistics & Fulfillment Services,Logistics & Fulfillment Services,0,4350565426.84276
+ZALANDO,Transportation Services,Miscellaneous Services,Other Miscellaneous Services,0,30147.816143871
+ZALANDO,Warehouse Equipment,Automation,Automation Robots,0,1142671.13125488
+ZALANDO,Warehouse Equipment,Automation,Conveyor System,0,64887756.850669
+ZALANDO,Warehouse Equipment,Automation,Initial Spare Parts Package,0,2334828.30452095
+ZALANDO,Warehouse Equipment,Automation,Multiple Major Systems,0,26511230.4898424
+ZALANDO,Warehouse Equipment,Automation,Other Automation Warehouse Technologies,0,1797932.5274273
+ZALANDO,Warehouse Equipment,Automation,Picking Systems,0,156901.076317404
+ZALANDO,Warehouse Equipment,Automation,Sorter Systems,0,1033679.26111593
+ZALANDO,Warehouse Equipment,Carts,Aluminium Carts,0,29038.233382074
+ZALANDO,Warehouse Equipment,Carts,Steel Carts,0,516113.79361348
+ZALANDO,Warehouse Equipment,Industrial Trucks,Material Handling Equipment (Forklift),0,731566.875974911
+ZALANDO,Warehouse Equipment,Industrial Trucks,Swap Body Truck,0,1896566.01379572
+ZALANDO,Warehouse Equipment,Maintenance,Maintenance Conveyor System,0,51878373.1050374
+ZALANDO,Warehouse Equipment,Maintenance,Maintenance Industrial Trucks,0,810561.512274853
+ZALANDO,Warehouse Equipment,Maintenance,Maintenance Picking Systems,0,2730.150423213
+ZALANDO,Warehouse Equipment,Maintenance,Maintenance Robots,0,60906.118168201
+ZALANDO,Warehouse Equipment,Maintenance,Maintenance Sorter Systems,0,3755566.0204391
+ZALANDO,Warehouse Equipment,Maintenance,Other Maintenance Warehouse Technologies,0,896746.674995345
+ZALANDO,Warehouse Equipment,Maintenance,Spare Parts Replenishment,0,2354157.65973183
+ZALANDO,Warehouse Equipment,Storage Systems,Labeling,0,-33648.492070699
+ZALANDO,Warehouse Equipment,Storage Systems,Other Storage Systems,0,973042.989571795
+ZALANDO,Warehouse Equipment,Storage Systems,Pallet Systems,0,58081.327976565
+ZALANDO,Warehouse Equipment,Storage Systems,Pick Towers,0,26746548.4560615
+ZALANDO,Warehouse Equipment,Storage Systems,Steel Construction,0,71954.62420896
+ZALANDO,Warehouse Equipment,Totes,Beauty Metal Boxes,0,54185.989882875
+ZALANDO,Warehouse Equipment,Totes,Other totes / plastic boxes,0,6275.192637448
+ZALANDO,Warehouse Equipment,Totes,Totes for Conveyor Technology,0,338769.211950726
+ZALANDO,Warehouse Equipment,Totes,Totes for Shuttle Technology,0,3503469.34866307
+ZALANDO,Warehouse Equipment,Workstations,Lift Tables,0,786801.226782563
+ZALANDO,Warehouse Equipment,Workstations,Other Workstations,0,1134873.35746806
+ZALANDO,Warehouse Equipment,Workstations,Worktables,0,3308121.09228784
