@@ -90,4 +90,17 @@
   .candidate-card {
     background-color: hsl(var(--card));
   }
+  
+  /* Level color backgrounds for taxonomy matching */
+  .level-l1-bg {
+    background-color: hsl(var(--chart-1) / 0.1);
+  }
+  
+  .level-l2-bg {
+    background-color: hsl(var(--chart-2) / 0.1);
+  }
+  
+  .level-l3-bg {
+    background-color: hsl(var(--chart-3) / 0.1);
+  }
 }

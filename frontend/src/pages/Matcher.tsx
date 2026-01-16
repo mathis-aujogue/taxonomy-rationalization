@@ -465,7 +465,7 @@ export default function Matcher() {
                     <TableHeader>
                     <TableRow>
                         <TableHead 
-                          className="cursor-pointer hover:bg-muted select-none transition-colors w-[11%]"
+                          className="cursor-pointer hover:bg-muted select-none transition-colors w-[10%] level-l1-bg"
                           onClick={() => handleSort('target_l1')}
                         >
                           <div className="flex items-center truncate">
@@ -474,7 +474,7 @@ export default function Matcher() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="cursor-pointer hover:bg-muted select-none bg-card w-[11%]"
+                          className="cursor-pointer hover:bg-muted select-none bg-card w-[10%] level-l2-bg"
                           onClick={() => handleSort('target_l2')}
                         >
                           <div className="flex items-center truncate">
@@ -483,7 +483,7 @@ export default function Matcher() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="cursor-pointer hover:bg-muted select-none bg-card w-[14%]"
+                          className="cursor-pointer hover:bg-muted select-none bg-card w-[12%] level-l3-bg"
                           onClick={() => handleSort('target_l3')}
                         >
                           <div className="flex items-center truncate">
@@ -491,8 +491,9 @@ export default function Matcher() {
                             <SortIcon field="target_l3" />
                           </div>
                         </TableHead>
+                        <TableHead className="w-[2%] bg-muted border-l-2 border-r-2 border-border"></TableHead>
                         <TableHead 
-                          className="cursor-pointer hover:bg-muted select-none bg-card w-[11%]"
+                          className="cursor-pointer hover:bg-muted select-none bg-card w-[10%] level-l1-bg"
                           onClick={() => handleSort('matched_l1')}
                         >
                           <div className="flex items-center truncate">
@@ -501,7 +502,7 @@ export default function Matcher() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="cursor-pointer hover:bg-muted select-none bg-card w-[11%]"
+                          className="cursor-pointer hover:bg-muted select-none bg-card w-[10%] level-l2-bg"
                           onClick={() => handleSort('matched_l2')}
                         >
                           <div className="flex items-center truncate">
@@ -510,7 +511,7 @@ export default function Matcher() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="cursor-pointer hover:bg-muted select-none bg-card w-[14%]"
+                          className="cursor-pointer hover:bg-muted select-none bg-card w-[12%] level-l3-bg"
                           onClick={() => handleSort('matched_l3')}
                         >
                           <div className="flex items-center truncate">
@@ -557,12 +558,13 @@ export default function Matcher() {
                               setManualSearch('');
                             }}
                           >
-                            <TableCell className="p-2 truncate" title={result.target_l1}>{result.target_l1}</TableCell>
-                            <TableCell className="p-2 truncate" title={result.target_l2}>{result.target_l2}</TableCell>
-                            <TableCell className="font-medium p-2 truncate" title={result.target_l3}>{result.target_l3}</TableCell>
-                            <TableCell className="p-2 truncate" title={result.matched_l1}>{result.matched_l1}</TableCell>
-                            <TableCell className="p-2 truncate" title={result.matched_l2}>{result.matched_l2}</TableCell>
-                            <TableCell className="p-2 truncate" title={result.matched_l3}>{result.matched_l3}</TableCell>
+                            <TableCell className="p-2 truncate level-l1-bg" title={result.target_l1}>{result.target_l1}</TableCell>
+                            <TableCell className="p-2 truncate level-l2-bg" title={result.target_l2}>{result.target_l2}</TableCell>
+                            <TableCell className="font-medium p-2 truncate level-l3-bg" title={result.target_l3}>{result.target_l3}</TableCell>
+                            <TableCell className="p-2 bg-muted border-l-2 border-r-2 border-border"></TableCell>
+                            <TableCell className="p-2 truncate level-l1-bg" title={result.matched_l1}>{result.matched_l1}</TableCell>
+                            <TableCell className="p-2 truncate level-l2-bg" title={result.matched_l2}>{result.matched_l2}</TableCell>
+                            <TableCell className="p-2 truncate level-l3-bg" title={result.matched_l3}>{result.matched_l3}</TableCell>
                             <TableCell className="p-2">
                                 <Badge variant={confidenceVariant} className="text-[10px] px-1 h-5">
                                     {result.confidence.toFixed(3)}
@@ -610,15 +612,15 @@ export default function Matcher() {
                                     <div className="space-y-3">
                                       <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Client Taxonomy</h4>
                                       <div className="space-y-2 p-4 bg-background rounded-md border">
-                                        <div>
+                                        <div className="p-2 rounded level-l1-bg">
                                           <span className="text-xs text-muted-foreground">L1:</span>
                                           <p className="font-medium">{result.target_l1 || <span className="text-muted-foreground italic">N/A</span>}</p>
                                         </div>
-                                        <div>
+                                        <div className="p-2 rounded level-l2-bg">
                                           <span className="text-xs text-muted-foreground">L2:</span>
                                           <p className="font-medium">{result.target_l2}</p>
                                         </div>
-                                        <div>
+                                        <div className="p-2 rounded level-l3-bg">
                                           <span className="text-xs text-muted-foreground">L3:</span>
                                           <p className="font-medium text-lg">{result.target_l3}</p>
                                         </div>
@@ -627,15 +629,15 @@ export default function Matcher() {
                                     <div className="space-y-3">
                                       <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Matched Taxonomy</h4>
                                       <div className="space-y-2 p-4 bg-background rounded-md border">
-                                        <div>
+                                        <div className="p-2 rounded level-l1-bg">
                                           <span className="text-xs text-muted-foreground">L1:</span>
                                           <p className="font-medium">{result.matched_l1 || <span className="text-muted-foreground italic">N/A</span>}</p>
                                         </div>
-                                        <div>
+                                        <div className="p-2 rounded level-l2-bg">
                                           <span className="text-xs text-muted-foreground">L2:</span>
                                           <p className="font-medium">{result.matched_l2}</p>
                                         </div>
-                                        <div>
+                                        <div className="p-2 rounded level-l3-bg">
                                           <span className="text-xs text-muted-foreground">L3:</span>
                                           <p className="font-medium text-lg">{result.matched_l3}</p>
                                         </div>
