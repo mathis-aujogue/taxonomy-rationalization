@@ -1,6 +1,6 @@
 /** API client for taxonomy matching backend. */
 
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -10,6 +10,47 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Separate axios instance for file uploads (without default Content-Type)
+const apiFileUpload = axios.create({
+  baseURL: API_BASE_URL,
+  // Don't set Content-Type - axios will add it automatically with boundary for FormData
+});
+
+// Helper function to extract error messages from FastAPI errors
+export function extractErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError<any>;
+    const detail = axiosError.response?.data?.detail;
+    
+    // Handle FastAPI validation errors (array of error objects)
+    if (Array.isArray(detail)) {
+      return detail.map((err: any) => {
+        const loc = Array.isArray(err.loc) ? err.loc.slice(1).join('.') : '';
+        return `${loc ? `${loc}: ` : ''}${err.msg || err.message || 'Validation error'}`;
+      }).join('; ');
+    }
+    
+    // Handle string error messages
+    if (typeof detail === 'string') {
+      return detail;
+    }
+    
+    // Fallback to other error fields
+    return axiosError.response?.data?.message || axiosError.message || 'An error occurred';
+  }
+  
+  // Handle non-axios errors
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  return 'An unknown error occurred';
+}
 
 // Types
 export interface ColumnMapping {
@@ -81,9 +122,9 @@ export const uploadTaxonomy = async (
   formData.append('l3_column', columnMapping.l3);
   if (columnMapping.definition) formData.append('definition_column', columnMapping.definition);
 
-  const response = await api.post('/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  // Use the file upload instance which doesn't have default Content-Type
+  // Axios will automatically detect FormData and set Content-Type with boundary
+  const response = await apiFileUpload.post('/upload', formData);
   return response.data;
 };
 
@@ -238,5 +279,42 @@ export const exportMatchSession = async (sessionId: number): Promise<Blob> => {
   const response = await api.get(`/match-sessions/${sessionId}/export`, {
     responseType: 'blob',
   });
+  return response.data;
+};
+
+export const exportMatchResults = async (
+  results: MatchResult[],
+  validationStates?: Record<string, string>,
+  format: 'csv' | 'excel' = 'csv'
+): Promise<Blob> => {
+  const response = await api.post(
+    '/export/match-results',
+    { results, validation_states: validationStates, format },
+    { responseType: 'blob' }
+  );
+  return response.data;
+};
+
+export const exportTaxonomyTree = async (
+  targetId: string,
+  format: 'csv' | 'excel' = 'csv'
+): Promise<Blob> => {
+  const response = await api.post(
+    '/export/taxonomy',
+    { target_id: targetId, format },
+    { responseType: 'blob' }
+  );
+  return response.data;
+};
+
+export const exportVectorStatusData = async (
+  targetId?: string,
+  format: 'csv' | 'excel' = 'csv'
+): Promise<Blob> => {
+  const response = await api.post(
+    '/export/vector-status',
+    { target_id: targetId, format },
+    { responseType: 'blob' }
+  );
   return response.data;
 };

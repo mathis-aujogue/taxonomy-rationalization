@@ -150,3 +150,22 @@ class MatchSessionResponse(BaseModel):
     validation_states: Dict[str, str]
     created_at: datetime
     updated_at: datetime
+
+
+class ExportMatchResultsRequest(BaseModel):
+    """Request to export match results."""
+    results: List[MatchResult]
+    validation_states: Optional[Dict[str, str]] = None
+    format: str = Field("csv", description="Export format: csv or excel")
+
+
+class ExportTaxonomyRequest(BaseModel):
+    """Request to export taxonomy tree."""
+    target_id: str
+    format: str = Field("csv", description="Export format: csv or excel")
+
+
+class ExportVectorStatusRequest(BaseModel):
+    """Request to export vector status."""
+    target_id: Optional[str] = None
+    format: str = Field("csv", description="Export format: csv or excel")

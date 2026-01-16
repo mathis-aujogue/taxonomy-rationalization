@@ -25,7 +25,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Search, RefreshCw, Play, Check, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Download, CheckCircle2, Settings } from 'lucide-react';
+import { Search, RefreshCw, Play, Check, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Download, CheckCircle2, Settings, FileDown } from 'lucide-react';
+import { exportMatchResults } from '../api/client';
 
 type SortField = 'target_l1' | 'target_l2' | 'target_l3' | 'matched_l1' | 'matched_l2' | 'matched_l3' | 'confidence' | 'status';
 
@@ -167,6 +168,23 @@ export default function Matcher() {
       const a = document.createElement('a');
       a.href = url;
       a.download = `match_session_${sessionId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+  });
+
+  const exportResultsMutation = useMutation({
+    mutationFn: ({ format }: { format: 'csv' | 'excel' }) => {
+      return exportMatchResults(filteredAndSortedResults, validationStates, format);
+    },
+    onSuccess: (blob, variables) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const extension = variables.format === 'excel' ? 'xlsx' : 'csv';
+      a.href = url;
+      a.download = `match_results_${new Date().toISOString().split('T')[0]}.${extension}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -397,19 +415,39 @@ export default function Matcher() {
                         </AlertDescription>
                     </Alert>
                     <Alert className="bg-muted border">
-                        <AlertDescription className="flex items-center justify-between">
+                        <AlertDescription className="flex items-center justify-between flex-wrap gap-2">
                             <span>
                                 <strong>Validation Progress:</strong> {validatedCount} validated, {pendingCount} pending
                             </span>
-                            <Button
-                                onClick={() => exportMutation.mutate()}
-                                disabled={!allValidated || exportMutation.isPending}
-                                className="gap-2"
-                                variant={allValidated ? "default" : "outline"}
-                            >
-                                <Download className="h-4 w-4" />
-                                {exportMutation.isPending ? "Exporting..." : "Export Validated"}
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={() => exportResultsMutation.mutate({ format: 'csv' })}
+                                    disabled={exportResultsMutation.isPending}
+                                    variant="outline"
+                                    className="gap-2"
+                                >
+                                    <FileDown className="h-4 w-4" />
+                                    {exportResultsMutation.isPending ? "Exporting..." : "Export CSV"}
+                                </Button>
+                                <Button
+                                    onClick={() => exportResultsMutation.mutate({ format: 'excel' })}
+                                    disabled={exportResultsMutation.isPending}
+                                    variant="outline"
+                                    className="gap-2"
+                                >
+                                    <FileDown className="h-4 w-4" />
+                                    {exportResultsMutation.isPending ? "Exporting..." : "Export Excel"}
+                                </Button>
+                                <Button
+                                    onClick={() => exportMutation.mutate()}
+                                    disabled={!allValidated || exportMutation.isPending}
+                                    className="gap-2"
+                                    variant={allValidated ? "default" : "outline"}
+                                >
+                                    <Download className="h-4 w-4" />
+                                    {exportMutation.isPending ? "Exporting..." : "Export Validated"}
+                                </Button>
+                            </div>
                         </AlertDescription>
                     </Alert>
                 </div>
@@ -458,7 +496,31 @@ export default function Matcher() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Matching Results ({filteredAndSortedResults.length})</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Matching Results ({filteredAndSortedResults.length})</CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => exportResultsMutation.mutate({ format: 'csv' })}
+                    disabled={exportResultsMutation.isPending}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <FileDown className="h-4 w-4" />
+                    CSV
+                  </Button>
+                  <Button
+                    onClick={() => exportResultsMutation.mutate({ format: 'excel' })}
+                    disabled={exportResultsMutation.isPending}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <FileDown className="h-4 w-4" />
+                    Excel
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
                 <Table className="text-xs table-fixed w-full">

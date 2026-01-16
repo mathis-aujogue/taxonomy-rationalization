@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ChevronRight, ChevronDown, Folder, FileText } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FileText, FileDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { exportTaxonomyTree } from '../api/client';
+import { useMutation } from '@tanstack/react-query';
 
 function TreeNode({ node, level = 0 }: { node: TaxonomyNode; level?: number }) {
   const [open, setOpen] = useState(false);
@@ -61,6 +63,23 @@ export default function TaxonomyViewer() {
     queryKey: ['taxonomy', targetId],
     queryFn: () => getOurTaxonomy(targetId),
     enabled: false, 
+  });
+
+  const exportMutation = useMutation({
+    mutationFn: ({ format }: { format: 'csv' | 'excel' }) => {
+      return exportTaxonomyTree(targetId, format);
+    },
+    onSuccess: (blob, variables) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const extension = variables.format === 'excel' ? 'xlsx' : 'csv';
+      a.href = url;
+      a.download = `taxonomy_${targetId}_${new Date().toISOString().split('T')[0]}.${extension}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
   });
 
   const handleLoad = () => {
@@ -119,7 +138,31 @@ export default function TaxonomyViewer() {
       {data && (
         <Card className="flex-1 overflow-hidden flex flex-col min-h-0">
             <CardHeader className="py-4 border-b shrink-0">
-                <CardTitle className="text-base">Taxonomy Tree ({data.nodes.length} root nodes)</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Taxonomy Tree ({data.nodes.length} root nodes)</CardTitle>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => exportMutation.mutate({ format: 'csv' })}
+                            disabled={exportMutation.isPending}
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                        >
+                            <FileDown className="h-4 w-4" />
+                            {exportMutation.isPending ? "Exporting..." : "Export CSV"}
+                        </Button>
+                        <Button
+                            onClick={() => exportMutation.mutate({ format: 'excel' })}
+                            disabled={exportMutation.isPending}
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                        >
+                            <FileDown className="h-4 w-4" />
+                            {exportMutation.isPending ? "Exporting..." : "Export Excel"}
+                        </Button>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-2">
                 <div className="space-y-0.5">

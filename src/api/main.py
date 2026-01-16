@@ -1,6 +1,6 @@
 """FastAPI main application."""
 
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
@@ -24,6 +24,9 @@ from .models import (
     MatchSessionCreate,
     MatchSessionUpdate,
     MatchSessionResponse,
+    ExportMatchResultsRequest,
+    ExportTaxonomyRequest,
+    ExportVectorStatusRequest,
 )
 from .services import TaxonomyService
 from .vector_status import check_vector_embeddings_status
@@ -66,11 +69,11 @@ async def root():
 @app.post("/upload")
 async def upload_taxonomy(
     file: UploadFile = File(...),
-    target_id: Optional[str] = None,
-    l1_column: Optional[str] = None,
-    l2_column: Optional[str] = None,
-    l3_column: Optional[str] = None,
-    definition_column: Optional[str] = None,
+    target_id: Optional[str] = Form(None),
+    l1_column: Optional[str] = Form(None),
+    l2_column: Optional[str] = Form(None),
+    l3_column: Optional[str] = Form(None),
+    definition_column: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
     """Upload a taxonomy CSV file."""
@@ -504,6 +507,201 @@ async def export_match_session(session_id: int, db: Session = Depends(get_db)):
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="match_session_{session_id}.csv"'},
     )
+
+
+@app.post("/export/match-results")
+async def export_match_results(request: ExportMatchResultsRequest):
+    """Export match results to CSV or Excel."""
+    if not request.results:
+        raise HTTPException(status_code=400, detail="No results to export")
+    
+    # Convert to DataFrame
+    rows = []
+    for result in request.results:
+        validation_status = 'pending'
+        if request.validation_states:
+            validation_status = request.validation_states.get(result.target_l3, 'pending')
+        
+        rows.append({
+            'Client L1': result.target_l1 or '',
+            'Client L2': result.target_l2 or '',
+            'Client L3': result.target_l3 or '',
+            'Matched L1': result.matched_l1 or '',
+            'Matched L2': result.matched_l2 or '',
+            'Matched L3': result.matched_l3 or '',
+            'Confidence': round(result.confidence, 3),
+            'Status': result.status or '',
+            'Validation': validation_status,
+            'Reasoning': result.reasoning or '',
+        })
+    
+    df = pd.DataFrame(rows)
+    output = io.BytesIO()
+    
+    if request.format == "excel":
+        df.to_excel(output, index=False, engine='openpyxl')
+        output.seek(0)
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": 'attachment; filename="match_results.xlsx"'},
+        )
+    else:
+        df.to_csv(output, index=False)
+        output.seek(0)
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="match_results.csv"'},
+        )
+
+
+@app.post("/export/taxonomy")
+async def export_taxonomy_tree(request: ExportTaxonomyRequest, db: Session = Depends(get_db)):
+    """Export taxonomy tree to CSV or Excel."""
+    service = TaxonomyService(db)
+    try:
+        nodes_data = await service.get_our_taxonomy(request.target_id)
+        
+        # Flatten tree structure
+        def flatten_node(node_data, level=0, parent_l1=None, parent_l2=None):
+            l1 = node_data.get("l1") or parent_l1 or ""
+            l2 = node_data.get("l2") or parent_l2 or ""
+            l3 = node_data.get("l3", "")
+            
+            rows = []
+            if l3:
+                rows.append({
+                    'Level': level,
+                    'L1': l1,
+                    'L2': l2,
+                    'L3': l3,
+                    'Definition': node_data.get("definition", ""),
+                })
+            
+            # Handle children if they exist
+            children = node_data.get("children", [])
+            for child in children:
+                rows.extend(flatten_node(child, level + 1, l1, l2))
+            
+            return rows
+        
+        # Build tree structure first (similar to get_our_taxonomy endpoint)
+        nodes_map = {}
+        root_nodes = []
+        
+        for node_data in nodes_data:
+            l1 = node_data.get("l1", "")
+            l2 = node_data.get("l2", "")
+            l3 = node_data.get("l3", "")
+            
+            node_dict = {
+                "l1": l1 if l1 else None,
+                "l2": l2 if l2 else None,
+                "l3": l3,
+                "definition": node_data.get("definition"),
+                "children": [],
+            }
+            
+            if l1 and l2:
+                key = f"{l1}::{l2}"
+                if key not in nodes_map:
+                    parent = {"l1": l1, "l2": l2, "l3": "", "children": [], "definition": None}
+                    nodes_map[key] = parent
+                    if l1 not in nodes_map:
+                        l1_node = {"l1": l1, "l2": "", "l3": "", "children": [], "definition": None}
+                        nodes_map[l1] = l1_node
+                        root_nodes.append(l1_node)
+                    nodes_map[l1]["children"].append(parent)
+                nodes_map[key]["children"].append(node_dict)
+            elif l2:
+                key = l2
+                if key not in nodes_map:
+                    parent = {"l2": l2, "l3": "", "children": [], "definition": None}
+                    nodes_map[key] = parent
+                    root_nodes.append(parent)
+                nodes_map[key]["children"].append(node_dict)
+            else:
+                root_nodes.append(node_dict)
+        
+        # Flatten all nodes
+        all_rows = []
+        for root_node in root_nodes:
+            all_rows.extend(flatten_node(root_node))
+        
+        if not all_rows:
+            raise HTTPException(status_code=400, detail="No taxonomy data to export")
+        
+        df = pd.DataFrame(all_rows)
+        output = io.BytesIO()
+        
+        if request.format == "excel":
+            df.to_excel(output, index=False, engine='openpyxl')
+            output.seek(0)
+            return StreamingResponse(
+                io.BytesIO(output.read()),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f'attachment; filename="taxonomy_{request.target_id}.xlsx"'},
+            )
+        else:
+            df.to_csv(output, index=False)
+            output.seek(0)
+            return StreamingResponse(
+                io.BytesIO(output.read()),
+                media_type="text/csv",
+                headers={"Content-Disposition": f'attachment; filename="taxonomy_{request.target_id}.csv"'},
+            )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/export/vector-status")
+async def export_vector_status_data(request: ExportVectorStatusRequest):
+    """Export vector status to CSV or Excel."""
+    try:
+        status = await check_vector_embeddings_status(request.target_id)
+        
+        rows = []
+        for target_id, target_status in status.get("targets", {}).items():
+            rows.append({
+                'Target ID': target_id or '(unknown)',
+                'Total Records': target_status.get('total_records', 0),
+                'Categories': target_status.get('num_categories', 0),
+                'Completeness %': round(target_status.get('completeness_ratio', 0) * 100, 1),
+                'Ready for Matching': 'Yes' if target_status.get('ready_for_hybrid_matching') else 'No',
+                'Has L1': 'Yes' if target_status.get('has_required_components', {}).get('l1') else 'No',
+                'Has L2': 'Yes' if target_status.get('has_required_components', {}).get('l2') else 'No',
+                'Has L3': 'Yes' if target_status.get('has_required_components', {}).get('l3') else 'No',
+                'Has Full': 'Yes' if target_status.get('has_required_components', {}).get('full') else 'No',
+                'Has Description': 'Yes' if target_status.get('has_required_components', {}).get('desc') else 'No',
+            })
+        
+        if not rows:
+            raise HTTPException(status_code=400, detail="No vector status data to export")
+        
+        df = pd.DataFrame(rows)
+        output = io.BytesIO()
+        
+        if request.format == "excel":
+            df.to_excel(output, index=False, engine='openpyxl')
+            output.seek(0)
+            return StreamingResponse(
+                io.BytesIO(output.read()),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": 'attachment; filename="vector_status.xlsx"'},
+            )
+        else:
+            df.to_csv(output, index=False)
+            output.seek(0)
+            return StreamingResponse(
+                io.BytesIO(output.read()),
+                media_type="text/csv",
+                headers={"Content-Disposition": 'attachment; filename="vector_status.csv"'},
+            )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

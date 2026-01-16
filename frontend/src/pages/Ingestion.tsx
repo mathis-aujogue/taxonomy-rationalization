@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
-import { uploadTaxonomy, ingestTaxonomy, augmentTaxonomy } from '../api/client';
+import { uploadTaxonomy, ingestTaxonomy, augmentTaxonomy, extractErrorMessage } from '../api/client';
 import type { ColumnMapping } from '../api/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -312,7 +312,9 @@ export default function Ingestion() {
             {(uploadMutation.isError || ingestMutation.isError || augmentMutation.isError) && (
                 <Alert variant="destructive">
                     <AlertDescription>
-                        {String(uploadMutation.error || ingestMutation.error || augmentMutation.error)}
+                        {extractErrorMessage(
+                            uploadMutation.error || ingestMutation.error || augmentMutation.error
+                        )}
                     </AlertDescription>
                 </Alert>
             )}

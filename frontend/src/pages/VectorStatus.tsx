@@ -13,8 +13,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { RefreshCw, CheckCircle2, AlertTriangle, Database } from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertTriangle, Database, FileDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { exportVectorStatusData } from '../api/client';
+import { useMutation } from '@tanstack/react-query';
 
 export default function VectorStatus() {
   const [targetIdFilter, setTargetIdFilter] = useState<string>('');
@@ -27,6 +29,23 @@ export default function VectorStatus() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['vector-status', targetIdFilter || undefined],
     queryFn: () => getVectorStatus(targetIdFilter || undefined),
+  });
+
+  const exportMutation = useMutation({
+    mutationFn: ({ format }: { format: 'csv' | 'excel' }) => {
+      return exportVectorStatusData(targetIdFilter || undefined, format);
+    },
+    onSuccess: (blob, variables) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const extension = variables.format === 'excel' ? 'xlsx' : 'csv';
+      a.href = url;
+      a.download = `vector_status_${new Date().toISOString().split('T')[0]}.${extension}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
   });
 
   if (isLoading) {
@@ -67,10 +86,34 @@ export default function VectorStatus() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Vector Embeddings Status</h1>
-        <Button onClick={() => refetch()} variant="outline" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          {data && (
+            <>
+              <Button
+                onClick={() => exportMutation.mutate({ format: 'csv' })}
+                disabled={exportMutation.isPending}
+                variant="outline"
+                className="gap-2"
+              >
+                <FileDown className="h-4 w-4" />
+                {exportMutation.isPending ? "Exporting..." : "Export CSV"}
+              </Button>
+              <Button
+                onClick={() => exportMutation.mutate({ format: 'excel' })}
+                disabled={exportMutation.isPending}
+                variant="outline"
+                className="gap-2"
+              >
+                <FileDown className="h-4 w-4" />
+                {exportMutation.isPending ? "Exporting..." : "Export Excel"}
+              </Button>
+            </>
+          )}
+          <Button onClick={() => refetch()} variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <Card>
