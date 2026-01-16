@@ -3,7 +3,6 @@
 import json
 import pandas as pd
 from pathlib import Path
-from datetime import datetime
 from typing import List, Dict, Any
 
 
@@ -14,13 +13,14 @@ def generate_matched_csv(
     output_dir: Path,
 ) -> Path:
     """
-    Generate a copy of the input CSV with GDW_SUBCATEGORY filled (never modifies original).
+    Generate a new CSV file from scratch using only the generated columns.
 
     Args:
-        df: Original DataFrame
-        matches: List of match results with either:
-            - 'their_category_l3'/'matched_category_l3' (legacy format)
-            - 'target_l3'/'matched_l3' (new format)
+        df: Filtered DataFrame with category columns (CATEGORY L1, L2, L3)
+            Note: Lower number = lower precision. L1 is most general, L3 is most specific/precise.
+        matches: List of match results with:
+            - 'target_l1'/'target_l2'/'target_l3' (input categories)
+            - 'matched_l1'/'matched_l2'/'matched_l3' (matched categories)
         strategy: Matching strategy used (for filename)
         output_dir: Directory to save the matched CSV
 
@@ -28,43 +28,70 @@ def generate_matched_csv(
         Path to the generated matched CSV file
     """
 
-    # Create mapping from target L3 to matched L3
-    match_dict = {}
+    # Create a mapping from target L3 to matched data for quick lookup
+    match_lookup = {}
     for match in matches:
-        target_l3 = match.get("target_l3")
-        matched_l3 = match.get("matched_l3")
-        if matched_l3 and target_l3:
-            match_dict[target_l3] = matched_l3
+        target_l3 = match.get("target_l3", "")
+        if target_l3:
+            match_lookup[target_l3] = {
+                "matched_l2": match.get("matched_l2", ""),
+                "matched_l3": match.get("matched_l3", ""),
+            }
 
-    # Create a copy of the dataframe
-    df_copy = df.copy()
-
-    # Update GDW_SUBCATEGORY column (create if doesn't exist)
-    if "GDW_SUBCATEGORY" not in df_copy.columns:
-        df_copy["GDW_SUBCATEGORY"] = 0
-
-        # Determine which column to use for matching
-    source_column = "CATEGORY_L3"
-    if source_column not in df_copy.columns:
-        # Try alternative column names
-        for col in df_copy.columns:
-            if "L3" in col.upper() or "COMMODITY" in col.upper():
-                source_column = col
-                break
-
-    # Fill GDW_SUBCATEGORY with matches
-    if source_column in df_copy.columns:
-        df_copy["GDW_SUBCATEGORY"] = (
-            df_copy[source_column].map(match_dict).fillna(df_copy["GDW_SUBCATEGORY"])
-        )
-    else:
-        raise ValueError(f"Column {source_column} not found in dataframe")
+    # Build new DataFrame from scratch
+    output_data = []
+    
+    # Find the L3 column in the filtered df
+    l3_column = None
+    l2_column = None
+    l1_column = None
+    
+    for col in df.columns:
+        col_upper = col.upper()
+        if col == "CATEGORY L3" or (l3_column is None and "L3" in col_upper):
+            l3_column = col
+        if col == "CATEGORY L2" or (l2_column is None and "L2" in col_upper):
+            l2_column = col
+        if col == "CATEGORY L1" or (l1_column is None and "L1" in col_upper):
+            l1_column = col
+    
+    if not l3_column:
+        raise ValueError(f"Could not find L3 column in dataframe. Available columns: {list(df.columns)}")
+    
+    # Build rows from the filtered df and matches
+    for idx, row in df.iterrows():
+        target_l3 = str(row.get(l3_column, "")).strip()
+        target_l2 = str(row.get(l2_column, "")).strip() if l2_column else ""
+        target_l1 = str(row.get(l1_column, "")).strip() if l1_column else ""
+        
+        # Get matched data
+        match_data = match_lookup.get(target_l3, {})
+        matched_l2 = match_data.get("matched_l2", "")
+        matched_l3 = match_data.get("matched_l3", "")
+        
+        # GDW_SUBCATEGORY is the matched L3 (or 0 if no match)
+        gdw_subcategory = matched_l3 if matched_l3 else 0
+        
+        # Create row with only the columns we generate
+        output_row = {
+            "L1": target_l1,
+            "L2": target_l2,
+            "L3": target_l3,
+            "matched_l2": matched_l2,
+            "matched_l3": matched_l3,
+            "GDW_SUBCATEGORY": gdw_subcategory,
+        }
+        
+        output_data.append(output_row)
+    
+    # Create new DataFrame from scratch
+    df_output = pd.DataFrame(output_data)
 
     # Generate output path
     output_path = output_dir / "output_taxonomy.csv"
 
     # Save matched CSV
-    df_copy.to_csv(output_path, index=False)
+    df_output.to_csv(output_path, index=False)
     print(f"Generated matched CSV: {output_path}")
 
     return output_path
@@ -134,11 +161,21 @@ def generate_summary_statistics(
 
     # Calculate statistics
     total_categories = len(matches)
-    matched_categories = sum(1 for m in matches if m.get("matched_category_l3"))
+    
+    # Handle different key names for compatibility
+    def get_matched_l3(m):
+        return m.get("matched_l3") or m.get("matched_category_l3")
+        
+    def get_confidence(m):
+        if "confidence" in m:
+            return m["confidence"]
+        return m.get("confidence_score", 0.0)
+
+    matched_categories = sum(1 for m in matches if get_matched_l3(m))
     unmatched_categories = total_categories - matched_categories
 
     confidence_scores = [
-        m.get("confidence_score", 0.0) for m in matches if m.get("matched_category_l3")
+        get_confidence(m) for m in matches if get_matched_l3(m)
     ]
 
     avg_confidence = (

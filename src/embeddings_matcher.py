@@ -171,10 +171,19 @@ def _find_matching_embedding(
     Find the matching embedding for a given taxonomy row by comparing metadata.
     
     Matches by comparing l1, l2, l3 fields.
+    Note: Lower number = lower precision. L1 is most general, L3 is most specific/precise.
     """
     for emb in embeddings_list:
         metadata = emb["metadata"]
-        # Try to match by l3 first (most specific), then l2, then l1
+        # Match by l3 (most specific/precise) first, then l2, then l1 (most general)
+        # Check most specific first for better matching precision
+        if (
+            metadata.get("l3", "").strip().lower() == fields.get("l3", "").strip().lower()
+            and metadata.get("l2", "").strip().lower() == fields.get("l2", "").strip().lower()
+            and metadata.get("l1", "").strip().lower() == fields.get("l1", "").strip().lower()
+        ):
+            return emb
+        # Fallback: match by l2 and l3 if l1 not available
         if (
             metadata.get("l3", "").strip().lower() == fields.get("l3", "").strip().lower()
             and metadata.get("l2", "").strip().lower() == fields.get("l2", "").strip().lower()
