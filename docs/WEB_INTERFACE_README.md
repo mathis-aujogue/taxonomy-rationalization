@@ -6,7 +6,7 @@ This document describes the web interface for the Taxonomy Rationalization proje
 
 The web interface provides a user-friendly way to:
 - Upload and ingest client taxonomies
-- Generate LLM descriptions for categories
+- Generate AI descriptions for categories
 - Run hybrid matching between client and our taxonomies
 - Review and manually adjust matches
 - Export results
@@ -14,10 +14,10 @@ The web interface provides a user-friendly way to:
 
 ## Architecture
 
-- **Backend**: FastAPI (Python) - `src/api/`
-- **Frontend**: React + TypeScript + Material UI - `frontend/`
+- **Backend**: FastAPI (Python) - `backend/api/`
+- **Frontend**: React + TypeScript + Vite (Tailwind, Radix UI) - `frontend/`
 - **Database**: 
-  - PostgreSQL with pgvector for embeddings
+  - PostgreSQL with pgvector for vector storage
   - SQLite for job tracking
 
 ## Setup
@@ -36,11 +36,11 @@ The web interface provides a user-friendly way to:
 uv sync
 ```
 
-2. Start the FastAPI server:
+2. Start the FastAPI server (from project root):
 ```bash
-./run_api.sh
+make api
 # Or manually:
-uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+cd backend && uv run uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 The API will be available at `http://localhost:8000`
@@ -58,25 +58,24 @@ npm install
 VITE_API_URL=http://localhost:8000
 ```
 
-3. Start the development server:
+3. Start the development server (from project root):
 ```bash
-./run_frontend.sh
+make frontend
 # Or manually:
-cd frontend
-npm run dev
+cd frontend && npm run dev
 ```
 
 The frontend will be available at `http://localhost:5173`
 
 ## Usage
 
-### 1. Dashboard
+### 1. Vector Status
 
-View all uploaded taxonomies and their status:
+View all uploaded taxonomies and their status (sidebar: **Vector Status**):
 - **uploaded**: File uploaded, ready for ingestion
-- **ingesting**: Embeddings being generated
-- **ingested**: Embeddings ready
-- **augmenting**: LLM descriptions being generated
+- **ingesting**: Vectors being generated
+- **ingested**: Vectors ready
+- **augmenting**: Descriptions being generated
 - **augmented**: Descriptions ready
 - **matching**: Matching in progress
 - **matched**: Matching complete
@@ -93,15 +92,15 @@ View all uploaded taxonomies and their status:
    - **L1 Column** (optional): High-level category
    - **Definition Column** (optional): Category description
 
-**Step 2: Ingest Embeddings**
-- Generates embeddings for all taxonomy components (L1, L2, L3, full path, description)
-- Stores in PostgreSQL vector database
+**Step 2: Ingest**
+- Generates vectors for all taxonomy components (L1, L2, L3, full path, description)
+- Stores in PostgreSQL (pgvector)
 - This step is required before matching
 
-**Step 3: LLM Augmentation** (Optional)
-- Generate descriptions for categories using LLM
+**Step 3: Description generation** (Optional)
+- Generate descriptions for categories using the AI model
 - Customize prompt template (use `{l1}`, `{l2}`, `{l3}`, `{definition}` placeholders)
-- Select LLM model (optional, uses default if not specified)
+- Select model (optional, uses default if not specified)
 
 ### 3. Matcher Page
 
@@ -134,9 +133,9 @@ Visualize our internal taxonomy structure:
 ### 5. Export
 
 Export matched results:
-- Available from the Dashboard (download icon)
+- Available from the Matcher page or via export API endpoints
 - Exports as CSV or Excel format
-- Includes all matched categories with confidence scores
+- Includes matched categories with confidence scores
 
 ## API Endpoints
 
@@ -147,7 +146,7 @@ Export matched results:
 - `POST /ingest` - Generate and store embeddings
 
 ### Augmentation
-- `POST /augment` - Generate LLM descriptions
+- `POST /augment` - Generate AI descriptions
 
 ### Matching
 - `POST /match` - Run hybrid matching
@@ -159,19 +158,27 @@ Export matched results:
 ### Taxonomy
 - `GET /our-taxonomy/{target_id}` - Get taxonomy tree
 
+### Other
+- `GET /vector-status` - List vector DB status by target ID
+- `GET /target-ids` - List known target IDs
+
 ### Export
 - `POST /export` - Export matched taxonomy
+- `POST /export/match-results` - Export match session results
+- `POST /export/taxonomy` - Export taxonomy
+- `POST /export/vector-status` - Export vector status
 
 ## Development
 
 ### Backend Structure
 ```
-src/api/
+backend/api/
 ├── main.py          # FastAPI app and routes
 ├── models.py        # Pydantic models
 ├── database.py      # SQLAlchemy models for job tracking
-├── services.py     # Business logic
-└── generate_descriptions_api.py  # LLM augmentation logic
+├── services.py      # Business logic
+├── generate_descriptions_api.py  # Description generation
+└── vector_status.py # Vector DB status endpoints
 ```
 
 ### Frontend Structure
@@ -180,12 +187,15 @@ frontend/src/
 ├── api/
 │   └── client.ts    # API client and types
 ├── components/
-│   └── Layout.tsx   # Main layout with sidebar
+│   ├── Layout.tsx   # Main layout with sidebar
+│   └── ui/          # Shared UI components
+├── contexts/
+│   └── MatcherContext.tsx
 └── pages/
-    ├── Dashboard.tsx
     ├── Ingestion.tsx
     ├── Matcher.tsx
-    └── TaxonomyViewer.tsx
+    ├── TaxonomyViewer.tsx
+    └── VectorStatus.tsx
 ```
 
 ## Troubleshooting
@@ -202,8 +212,8 @@ frontend/src/
 - Ensure backend is running
 
 ### Database Issues
-- Ensure embeddings are ingested before matching
-- Check job status in Dashboard
+- Ensure vectors are ingested before matching
+- Check job status on Vector Status page
 - Review error messages in job details
 
 ## Next Steps
@@ -211,5 +221,4 @@ frontend/src/
 - Add user authentication
 - Implement batch operations
 - Add progress indicators for long-running operations
-- Add export functionality to Matcher page
 - Implement match history and versioning

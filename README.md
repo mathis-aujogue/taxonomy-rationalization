@@ -1,19 +1,19 @@
 # 🎯 Taxonomy Rationalization
 
-**AI-Powered Category Matching System**
+**AI-Powered Category Matching**
 
-Automatically match client taxonomies to your internal taxonomy using state-of-the-art AI techniques. This project provides three powerful matching strategies to ensure accurate, scalable category mapping for enterprise spend analysis.
+Map client taxonomies to your internal taxonomy using **hybrid matching**: semantic (vector) search for fast candidate retrieval and an AI model for accurate selection. Optional **description generation** enriches categories with AI-written descriptions to improve match quality.
 
 ---
 
 ## 📋 Overview
 
-When working with multiple clients, each may use different category taxonomies to classify their spending. This project solves the challenge of mapping client-specific categories to a standardized internal taxonomy, enabling:
+When working with multiple clients, each may use different category taxonomies. This project maps client-specific categories to a standardized internal taxonomy, enabling:
 
-- **Unified spend analysis** across multiple clients
+- **Unified spend analysis** across clients
 - **Automated category matching** at scale
-- **High accuracy** matching using AI/ML techniques
-- **Transparent decision-making** with confidence scores and reasoning
+- **High accuracy** via hybrid matching
+- **Transparent decisions** with confidence scores and reasoning
 
 ### The Problem
 
@@ -22,44 +22,20 @@ Client Taxonomy                    →    Internal Taxonomy
 ─────────────────                        ─────────────────
 Canteen Services                  →    FOOD SERVICES
 Cleaning Services and goods       →    JANITORIAL SERVICES
-Architecture, interior design...  →    ARCHITECTURAL SERVICES
 ```
 
-Manual matching is:
-- ❌ Time-consuming (hours per client)
-- ❌ Error-prone (inconsistent decisions)
-- ❌ Not scalable (hundreds of categories)
-- ❌ Hard to audit (no reasoning trail)
+Manual matching is time-consuming, error-prone, and hard to audit. This tool automates it.
 
 ---
 
-## 🚀 Three Matching Strategies
+## ⚡ Hybrid Matching
 
-The project offers three complementary approaches, each optimized for different use cases:
+**Balanced speed and accuracy** (~5–10 min for 200+ categories)
 
-### 1. 🔍 Embeddings-Based Matching
-**Fast & Efficient** | ~2-5 minutes for 200+ categories
+- **Step 1**: Vector search (Azure OpenAI + pgvector) retrieves top-k similar categories from the internal taxonomy.
+- **Step 2**: An AI model selects the best match from those candidates and explains why.
 
-- Uses semantic similarity via Azure OpenAI embeddings
-- Vector search with pgvector (PostgreSQL extension)
-- Best for: Large-scale matching with speed requirements
-- **Performance**: Fastest, cost-effective
-
-### 2. 🤖 LLM-Based Matching
-**Most Accurate** | ~10-20 minutes for 200+ categories
-
-- Direct matching using Azure OpenAI LLM (GPT-4)
-- Understands context and definitions
-- Best for: Complex categories requiring nuanced understanding
-- **Performance**: Most accurate, slower, higher cost
-
-### 3. ⚡ Hybrid Matching
-**Best of Both Worlds** | ~5-10 minutes for 200+ categories
-
-- Combines embeddings (fast filtering) + LLM (accurate selection)
-- Gets top-k candidates via vector search, then LLM selects best match
-- Best for: Production use cases requiring balance
-- **Performance**: Balanced speed and accuracy
+Optional **description generation** adds or enriches category descriptions before ingestion, improving match accuracy.
 
 ---
 
@@ -67,64 +43,29 @@ The project offers three complementary approaches, each optimized for different 
 
 ```
 ┌─────────────────┐
-│ Client Taxonomy │  (CSV: COMMODITY_L1, L2, L3)
+│ Client Taxonomy │  (CSV: L1, L2, L3, optional definitions)
 └────────┬────────┘
          │
          ▼
 ┌─────────────────────────────────────┐
-│   Matching Engine                   │
-│  ┌──────────┐  ┌──────────┐        │
-│  │Embeddings│  │   LLM    │        │
-│  │ Matcher  │  │ Matcher  │        │
-│  └────┬─────┘  └────┬─────┘        │
-│       │             │               │
-│       └──────┬──────┘               │
-│              │                      │
-│         ┌────▼────┐                 │
-│         │ Hybrid  │                 │
-│         │ Matcher │                 │
-│         └────┬────┘                 │
-└──────────────┼──────────────────────┘
-               │
-               ▼
+│   Optional: Description Generation   │  (AI augments categories)
+└────────┬────────────────────────────┘
+         │
+         ▼
 ┌─────────────────────────────────────┐
-│   PostgreSQL + pgvector             │
-│   (Vector Embeddings Storage)      │
-└─────────────────────────────────────┘
-               │
-               ▼
+│   Ingest → PostgreSQL + pgvector    │  (vectors for L1, L2, L3, descriptions)
+└────────┬────────────────────────────┘
+         │
+         ▼
 ┌─────────────────────────────────────┐
-│   Output Files                      │
-│  • Matched CSV                      │
-│  • Detailed Report                  │
-│  • Summary Statistics               │
+│   Hybrid Matcher                     │  (vector search + model selection)
+└────────┬────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────┐
+│   Output: Matched CSV, Report, Stats │
 └─────────────────────────────────────┘
 ```
-
----
-
-## 📊 Key Features
-
-### ✨ Intelligent Matching
-- **Semantic understanding**: Matches based on meaning, not just keywords
-- **Hierarchical context**: Considers L1, L2, L3 category relationships
-- **Definition-aware**: Uses category definitions for better accuracy
-
-### 📈 Confidence Scoring
-- Every match includes a confidence score (0.0 - 1.0)
-- Threshold-based filtering (configurable)
-- Top-k candidate ranking for review
-
-### 📝 Comprehensive Reporting
-- **Detailed Reports**: Every match with reasoning, alternatives, scores
-- **Summary Statistics**: Aggregate metrics, confidence distributions
-- **Comparison Tools**: Compare different matching strategies side-by-side
-
-### 🔄 Scalable & Production-Ready
-- Batch processing for hundreds of categories
-- Progress tracking with visual indicators
-- Error handling and retry logic
-- Docker-based PostgreSQL setup
 
 ---
 
@@ -132,201 +73,182 @@ The project offers three complementary approaches, each optimized for different 
 
 ### Prerequisites
 
-- Python 3.13+
-- Docker & Docker Compose
-- Azure OpenAI API keys
-- `uv` package manager
+- **Python 3.13+** and **uv** (package manager)
+- **Docker** and **Docker Compose** (for PostgreSQL + pgvector)
+- **Node.js** and **npm** (for the frontend)
+- **Azure OpenAI** API keys
 
-### Installation
+### 1. Install dependencies
 
 ```bash
-# Clone the repository
+# Clone and enter the repo
 git clone <repository-url>
 cd taxonomy-rationalization
 
-# Install dependencies
+# Backend (Python)
 uv sync
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your Azure OpenAI credentials
+# Frontend (Node) – only needed for the web UI
+cd frontend && npm install && cd ..
 ```
 
-### Basic Usage
+### 2. Environment
 
 ```bash
-# 1. Start PostgreSQL with pgvector
-docker-compose up -d
-
-# 2. Ingest our taxonomy (one-time setup)
-uv run src/ingest_taxonomy.py --input-csv assets/our_taxonomy.csv
-
-# 3. Run matching (choose your strategy)
-uv run src/embeddings_matcher.py    # Fast
-uv run src/llm_matcher.py           # Accurate
-uv run src/hybrid_matcher.py        # Balanced
+cp .env.example .env
+# Edit .env with your Azure OpenAI credentials and DB URL (see Configuration below)
 ```
 
-### Results
+### 3. Run with the web interface (recommended)
 
-Results are saved in `results/` directory:
-- `output_taxonomy.csv` - Updated taxonomy with matched categories
-- `detailed_report.csv` - Complete matching details
-- `summary.json` - Aggregate statistics
+Use three terminals:
+
+**Terminal 1 – Database (Docker must be running)**
+
+```bash
+make db
+```
+
+**Terminal 2 – Backend API**
+
+```bash
+make api
+```
+
+**Terminal 3 – Frontend**
+
+```bash
+make frontend
+```
+
+Then open **http://localhost:5173**. From the UI you can:
+
+- Upload and ingest taxonomies (our + client)
+- Optionally run **description generation** on a taxonomy
+- Run **hybrid matching** and review/export results
+
+### 4. Run from the command line (no frontend)
+
+```bash
+# Start DB (in one terminal)
+docker-compose up -d
+
+# Ingest our taxonomy (one-time)
+uv run backend/ingest_taxonomy.py --input-csv assets/our_taxonomy.csv
+
+# Optional: generate descriptions then re-ingest (or use the web “Augment” step)
+uv run backend/generate_descriptions.py assets/our_taxonomy.csv assets/our_taxonomy_enriched.csv
+
+# Run hybrid matching (our_target_id client_target_id, e.g. shq_hybrid zalando_hybrid)
+uv run backend/hybrid_matcher.py our_target_id client_target_id
+```
 
 ---
 
-## 📁 Project Structure
+## 🖥️ How to run the frontend
+
+### Requirements
+
+- **Docker** (for PostgreSQL): start the DB with `make db` or `docker-compose up -d`.
+- **uv**: used by the backend. Install from [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/) or:
+
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+
+- **Backend deps**: from project root run `uv sync`.
+- **Frontend deps**: run `npm install` inside `frontend/` (or use the one-time setup in Quick Start).
+
+### Steps (using the Makefile)
+
+1. **Start the database** (Docker must be running):
+
+   ```bash
+   make db
+   ```
+
+   Leave this running. In another terminal:
+
+2. **Start the API**:
+
+   ```bash
+   make api
+   ```
+
+   API will be at **http://localhost:8000**.
+
+3. **Start the frontend**:
+
+   ```bash
+   make frontend
+   ```
+
+   App will be at **http://localhost:5173**.
+
+Optional: set `VITE_API_URL=http://localhost:8000` in `frontend/.env` if the API is not on that URL.
+
+---
+
+## 📊 Features
+
+- **Hybrid matching**: Vector search + AI selection for speed and accuracy.
+- **Description generation**: Optional step to add or enrich category descriptions before ingestion.
+- **Confidence scores** (0.0–1.0) and reasoning for each match.
+- **Web UI**: Ingest, augment, match, review, and export without using the CLI.
+
+---
+
+## 📁 Project structure
 
 ```
 taxonomy-rationalization/
-├── assets/
-│   ├── our_taxonomy.csv          # Internal taxonomy (reference)
-│   └── their_taxonomy.csv        # Client taxonomy (to match)
-├── src/
-│   ├── embeddings_matcher.py     # Embeddings-based matching
-│   ├── llm_matcher.py            # LLM-based matching
-│   ├── hybrid_matcher.py         # Hybrid matching
-│   ├── ingest_taxonomy.py        # Vector DB ingestion
-│   ├── compare_results.py        # Compare matching strategies
-│   └── utils/                    # Utilities & helpers
-├── results/                      # Generated outputs
-├── docker-compose.yml            # PostgreSQL setup
-└── pyproject.toml                # Dependencies
+├── backend/
+│   ├── api/                    # FastAPI (main, services, generate_descriptions_api)
+│   ├── hybrid_matcher.py       # Hybrid matching
+│   ├── generate_descriptions.py # CLI description generation
+│   ├── ingest_taxonomy.py      # Ingest into vector DB
+│   ├── ingest_hybrid_embeddings.py
+│   └── utils/                  # Helpers
+├── frontend/                   # React + Vite + TypeScript
+├── assets/                     # our_taxonomy.csv, their_taxonomy.csv
+├── makefile                    # db, api, frontend targets
+├── docker-compose.yml          # PostgreSQL + pgvector
+└── pyproject.toml              # Python deps (uv)
 ```
-
----
-
-## 📈 Example Output
-
-### Input (Client Taxonomy)
-```csv
-DATA_SOURCE,COMMODITY_L1,COMMODITY_L2,COMMODITY_L3,GDW_SUBCATEGORY
-ZALANDO,(Corporate) Property,Facility Management,Canteen Services,0
-ZALANDO,(Corporate) Property,Facility Management,Cleaning Services,0
-```
-
-### Output (Matched Taxonomy)
-```csv
-DATA_SOURCE,COMMODITY_L1,COMMODITY_L2,COMMODITY_L3,GDW_SUBCATEGORY
-ZALANDO,(Corporate) Property,Facility Management,Canteen Services,FOOD SERVICES
-ZALANDO,(Corporate) Property,Facility Management,Cleaning Services,JANITORIAL SERVICES
-```
-
-### Detailed Report
-| their_category_l3 | matched_category_l3 | confidence_score | reasoning |
-|-------------------|---------------------|------------------|-----------|
-| Canteen Services | FOOD SERVICES | 0.92 | High semantic similarity... |
-| Cleaning Services | JANITORIAL SERVICES | 0.88 | Matches definition of... |
-
----
-
-## 🎯 Use Cases
-
-- **Spend Analytics**: Normalize spending data across multiple clients
-- **Procurement**: Map vendor categories to internal standards
-- **Compliance**: Ensure consistent categorization for reporting
-- **Data Integration**: Standardize taxonomies during data onboarding
 
 ---
 
 ## 🔧 Configuration
 
-### Environment Variables
+### Environment variables
 
 ```bash
-# Azure OpenAI
-AZURE_EMBEDDING_API_KEY=your_key
-AZURE_CHAT_API_KEY=your_key
-AZURE_EMBEDDING_ENDPOINT=https://...
-AZURE_CHAT_ENDPOINT=https://...
-AZURE_EMBEDDING_MODEL=text-embedding-ada-002
-AZURE_CHAT_MODEL=gpt-4
+# Database URL format:
+LOCAL_POSTGRESQL_URL=postgresql://<USERNAME>:<PASSWORD>@<HOST>:<PORT>/<DBNAME>
 
-# Database
-DB_TYPE=local
-LOCAL_POSTGRESQL_URL=postgresql://user:pass@localhost:5433/dbname
+# Azure OpenAI / Embedding credentials
+AZURE_CHAT_API_KEY=<your-azure-chat-api-key>
+AZURE_EMBEDDING_API_KEY=<your-azure-embedding-api-key>
+AZURE_CHAT_ENDPOINT=https://<your-resource-name>.openai.azure.com/
+AZURE_EMBEDDING_ENDPOINT=https://<your-resource-name>.openai.azure.com/
+AZURE_CHAT_MODEL=gpt-5.1-chat
+AZURE_EMBEDDING_MODEL=text-embedding-small-3
+AZURE_API_VERSION=2024-12-01-preview
+
+GROQ_API_KEY=gsk_...
+GROQ_MODEL=openai/gpt-oss-120b
+
 ```
 
-### Matching Parameters
-
-- **Confidence Threshold**: Minimum score to accept a match (default: 0.6)
-- **Top-K Candidates**: Number of alternatives to consider (default: 5)
-- **Batch Size**: Categories processed per batch (default: 10)
-
----
-
-## 📊 Performance Comparison
-
-| Method | Speed | Accuracy | Cost | Best For |
-|--------|-------|----------|------|----------|
-| **Embeddings** | ⚡⚡⚡ Fast | ⭐⭐ Good | 💰 Low | Large batches |
-| **LLM** | 🐌 Slow | ⭐⭐⭐ Excellent | 💰💰 Higher | Complex categories |
-| **Hybrid** | ⚡⚡ Medium | ⭐⭐⭐ Very Good | 💰💰 Medium | Production use |
-
----
-
-## 🧪 Testing & Validation
-
-```bash
-# Run unit tests
-uv run pytest
-
-# Compare matching strategies
-uv run src/compare_results.py \
-  --reference results/method1/detailed_report.csv \
-  --evaluation results/method2/detailed_report.csv
-
-# Generate comparison visualizations
-# (Creates confusion matrices and summary charts)
-```
+See `.env.example` for a full template.
 
 ---
 
 ## 📚 Documentation
 
-- **[AGENTS.md](AGENTS.md)**: Comprehensive technical documentation
-- **Code Comments**: Inline documentation in all modules
-- **Type Hints**: Full type annotations for IDE support
+- **[docs/WEB_INTERFACE_README.md](docs/WEB_INTERFACE_README.md)** – Web UI usage (ingestion, description generation, matching, export).
+- **[docs/HYBRID_MATCHER_METHODS.md](docs/HYBRID_MATCHER_METHODS.md)** – Hybrid matcher methods, weights, and CLI.
 
 ---
 
-## 🤝 Contributing
-
-This project follows best practices:
-- Type hints throughout
-- Pydantic models for data validation
-- Async/await for I/O operations
-- Comprehensive error handling
-- Progress tracking and logging
-
----
-
-## 📄 License
-
-[Add your license information here]
-
----
-
-## 🙏 Acknowledgments
-
-Built with:
-- **Azure OpenAI** - Embeddings and LLM services
-- **pgvector** - Vector similarity search
-- **LangChain** - AI orchestration
-- **PostgreSQL** - Robust data storage
-
----
-
-## 📞 Support
-
-For questions or issues:
-1. Check [AGENTS.md](AGENTS.md) for detailed documentation
-2. Review example outputs in `results/` directory
-3. Inspect logs for debugging information
-
----
-
-**Ready to rationalize your taxonomies?** 🚀
-
-Start with: `uv run src/ingest_taxonomy.py --input-csv assets/our_taxonomy.csv`
+**Ready to run?** Start with `make db`, then `make api`, then `make frontend`, and open http://localhost:5173.

@@ -116,11 +116,11 @@ This measures the angle between two vectors in embedding space, ranging from -1 
 Before matching, embeddings must be generated and stored:
 
 ```bash
-# Generate embeddings for our taxonomy
-uv run src/ingest_hybrid_embeddings.py assets/our_taxonomy_enriched.csv shq_hybrid
+# From project root. Generate vectors for our taxonomy:
+uv run backend/ingest_hybrid_embeddings.py assets/our_taxonomy_enriched.csv shq_hybrid
 
-# Generate embeddings for client taxonomy
-uv run src/ingest_hybrid_embeddings.py assets/zalando_taxonomy_enriched.csv zalando_hybrid
+# Generate vectors for client taxonomy:
+uv run backend/ingest_hybrid_embeddings.py assets/zalando_taxonomy_enriched.csv zalando_hybrid
 ```
 
 **What happens:**
@@ -131,7 +131,8 @@ uv run src/ingest_hybrid_embeddings.py assets/zalando_taxonomy_enriched.csv zala
 ### Step 2: Matching Execution
 
 ```bash
-uv run src/hybrid_matcher.py shq_hybrid zalando_hybrid
+# From project root:
+uv run backend/hybrid_matcher.py shq_hybrid zalando_hybrid
 ```
 
 **What happens:**
@@ -150,7 +151,7 @@ uv run src/hybrid_matcher.py shq_hybrid zalando_hybrid
 
 ### Customizing Weights
 
-You can customize the scoring weights by modifying the `DEFAULT_WEIGHTS` dictionary in `hybrid_matcher.py`:
+You can customize the scoring weights by modifying the `DEFAULT_WEIGHTS` dictionary in `backend/hybrid_matcher.py`:
 
 ```python
 DEFAULT_WEIGHTS = {
@@ -213,24 +214,11 @@ Property,Facility Management,Canteen Services,PROPERTY,FACILITY MANAGEMENT,FOOD 
 
 ---
 
-## Comparison with Other Matchers
-
-| Feature | Embeddings Matcher | LLM Matcher | Hybrid Matcher |
-|---------|-------------------|-------------|----------------|
-| **Speed** | Fastest (~2-5 min) | Slowest (~10-20 min) | Balanced (~5-10 min) |
-| **Accuracy** | Good | Best | Very Good |
-| **Cost** | Low | High | Low (after ingestion) |
-| **API Calls** | During matching | During matching | Only during ingestion |
-| **Signals Used** | Single embedding | LLM reasoning | 5 embeddings |
-| **Offline Capable** | No | No | Yes |
-
----
-
 ## Best Practices
 
-1. **Always enrich taxonomies first**: Ensure descriptions are generated before creating embeddings
+1. **Always enrich taxonomies first**: Ensure descriptions are generated before creating vectors
    ```bash
-   uv run src/generate_descriptions.py assets/our_taxonomy.csv assets/our_taxonomy_enriched.csv
+   uv run backend/generate_descriptions.py assets/our_taxonomy.csv assets/our_taxonomy_enriched.csv
    ```
 
 2. **Use descriptive target IDs**: Use clear identifiers like `shq_hybrid`, `zalando_hybrid` for easy tracking
@@ -239,14 +227,14 @@ Property,Facility Management,Canteen Services,PROPERTY,FACILITY MANAGEMENT,FOOD 
 
 4. **Tune weights for your domain**: Different taxonomies may benefit from different weight configurations
 
-5. **Monitor embedding freshness**: Re-generate embeddings when taxonomies are updated
+5. **Monitor vector freshness**: Re-ingest when taxonomies are updated
 
 ---
 
 ## Troubleshooting
 
 ### "No embeddings found for target_id"
-- **Solution**: Run `ingest_hybrid_embeddings.py` first to generate embeddings
+- **Solution**: Run `backend/ingest_hybrid_embeddings.py` first (or use the web UI Ingest step) to generate vectors
 
 ### Low confidence scores across the board
 - **Possible causes**: 
