@@ -81,18 +81,21 @@ class TaxonomyService:
             if mapping.definition:
                 remapped_data["DEFINITION"] = df[mapping.definition]
             remapped_df = pd.DataFrame(remapped_data)
+            # Preserve generated_description if present (e.g. re-upload of enriched file or different target_id)
+            if "generated_description" in df.columns:
+                remapped_df["generated_description"] = df["generated_description"]
 
             # Save remapped CSV temporarily
             temp_path = self.upload_dir / f"{target_id}_remapped.csv"
-            # Only include columns that exist
-            cols_to_save = [col for col in ["CATEGORY L1", "CATEGORY L2", "CATEGORY L3", "DEFINITION"] if col in remapped_df.columns]
+            cols_to_save = [col for col in ["CATEGORY L1", "CATEGORY L2", "CATEGORY L3", "DEFINITION", "generated_description"] if col in remapped_df.columns]
             remapped_df[cols_to_save].to_csv(temp_path, index=False)
 
             # Ingest using existing logic
-            await ingest_hybrid_embeddings(str(temp_path), target_id, clear_existing)
+            result = await ingest_hybrid_embeddings(str(temp_path), target_id, clear_existing)
 
             job.status = JobStatus.INGESTED.value
             self.db.commit()
+            job._ingestion_result = result  # for API response
             return job
 
         except Exception as e:
@@ -147,6 +150,10 @@ class TaxonomyService:
 
             # Save back
             remapped_df.to_csv(file_path, index=False)
+
+            # Re-ingest so the vector DB gets the new description embeddings (desc component).
+            # At first ingest we had no descriptions; now we do.
+            await ingest_hybrid_embeddings(str(temp_output), target_id, clear_existing=True)
 
             job.status = JobStatus.AUGMENTED.value
             self.db.commit()

@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Search, RefreshCw, Play, Check, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Download, CheckCircle2, Settings, FileDown } from 'lucide-react';
+import { Search, RefreshCw, Play, Check, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Download, CheckCircle2, Settings, FileDown, Trash2 } from 'lucide-react';
 import { exportMatchResults } from '../api/client';
 
 type SortField = 'target_l1' | 'target_l2' | 'target_l3' | 'matched_l1' | 'matched_l2' | 'matched_l3' | 'confidence' | 'status';
@@ -64,7 +64,7 @@ export default function Matcher() {
     queryFn: getTargetIds,
   });
 
-  const { state, setState, updateValidation } = useMatcherContext();
+  const { state, setState, updateValidation, reset } = useMatcherContext();
   const {
     ourTargetId,
     clientTargetId,
@@ -198,6 +198,14 @@ export default function Matcher() {
       return;
     }
     matchMutation.mutate();
+  };
+
+  const handleClear = () => {
+    if (results.length > 0 && !window.confirm('Clear all results and start from scratch? Your current session will be lost.')) return;
+    reset();
+    setSessionId(null);
+    setValidationFilter('all');
+    setManualSearch('');
   };
 
   const handleSort = (field: SortField) => {
@@ -385,7 +393,7 @@ export default function Matcher() {
                     </div>
                 </CollapsibleContent>
             </Collapsible>
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2 mt-4 flex-wrap">
                 <Button 
                     onClick={handleMatch} 
                     disabled={matchMutation.isPending}
@@ -397,6 +405,10 @@ export default function Matcher() {
                 <Button variant="outline" onClick={handleAutoAccept} className="gap-2">
                     <Check className="h-4 w-4" />
                     Auto-Accept High Confidence
+                </Button>
+                <Button variant="outline" onClick={handleClear} className="gap-2 text-muted-foreground hover:text-destructive hover:border-destructive">
+                    <Trash2 className="h-4 w-4" />
+                    Clear
                 </Button>
             </div>
 

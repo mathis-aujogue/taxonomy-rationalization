@@ -119,10 +119,15 @@ async def ingest_taxonomy(request: IngestRequest, db: Session = Depends(get_db))
     service = TaxonomyService(db)
     try:
         job = await service.ingest_taxonomy(request.target_id, request.clear_existing)
+        result = getattr(job, "_ingestion_result", None) or {}
+        l3_count = result.get("l3_count", 0)
+        total_embeddings = result.get("total_embeddings", 0)
         return {
             "target_id": job.target_id,
             "status": job.status,
             "message": "Ingestion completed successfully",
+            "l3_count": l3_count,
+            "total_embeddings": total_embeddings,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -340,14 +345,12 @@ async def get_target_ids():
         
         target_ids = [row[0] for row in rows if row[0]]
         
-        # Get status for each target_id and filter to only complete records
+        # Only include targets with complete records (ready for hybrid matching)
         result = []
         for target_id in target_ids:
             status = await check_vector_embeddings_status(target_id)
             target_status = status.get("targets", {}).get(target_id, {})
             ready_for_hybrid_matching = target_status.get("ready_for_hybrid_matching", False)
-            
-            # Only include targets with complete records
             if ready_for_hybrid_matching:
                 result.append({
                     "target_id": target_id,

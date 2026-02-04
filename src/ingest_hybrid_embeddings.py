@@ -43,12 +43,15 @@ async def ingest_hybrid_embeddings(
     csv_path: str,
     target_id: str,
     clear_existing: bool = False
-):
+) -> dict:
     """
     Ingest all embedding components for hybrid matching.
     
     Stores embeddings in the database with metadata indicating the component type:
     - component: 'l1' | 'l2' | 'l3' | 'full' | 'desc'
+
+    Returns:
+        Dict with total_embeddings (int) and l3_count (int) for taxonomy viewer.
     """
     setup_logging()
     
@@ -117,7 +120,8 @@ async def ingest_hybrid_embeddings(
         }
         
         total_embeddings = 0
-        
+        l3_count = 0
+
         for comp_type, texts in components.items():
             print(f"Generating '{comp_type}' embeddings...")
             embeddings = await get_embeddings_batch(services, texts)
@@ -209,8 +213,11 @@ async def ingest_hybrid_embeddings(
                 )
                 
                 total_embeddings += len(rows_to_insert)
+                if comp_type == "l3":
+                    l3_count = len(rows_to_insert)
 
         print(f"Successfully ingested {total_embeddings} hybrid embedding components for target ID: {target_id}")
+        return {"total_embeddings": total_embeddings, "l3_count": l3_count}
 
     finally:
         await services.aclose()

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ChevronRight, ChevronDown, Folder, FileText, FileDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FileText, FileDown, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportTaxonomyTree } from '../api/client';
 import { useMutation } from '@tanstack/react-query';
@@ -54,7 +54,7 @@ export default function TaxonomyViewer() {
   const [targetId, setTargetId] = useState('shq_hybrid');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: targetIdsData } = useQuery({
+  const { data: targetIdsData, refetch: refetchTargetIds, isFetching: isRefreshingTargetIds } = useQuery({
     queryKey: ['target-ids'],
     queryFn: getTargetIds,
   });
@@ -112,6 +112,16 @@ export default function TaxonomyViewer() {
                                 ))}
                             </SelectContent>
                         </Select>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => refetchTargetIds()}
+                            disabled={isRefreshingTargetIds}
+                            title="Refresh list of target IDs"
+                        >
+                            <RefreshCw className={cn("h-4 w-4", isRefreshingTargetIds && "animate-spin")} />
+                        </Button>
                         <Button onClick={handleLoad} disabled={isLoading}>
                             {isLoading ? "Loading..." : "Load"}
                         </Button>
@@ -139,7 +149,10 @@ export default function TaxonomyViewer() {
         <Card className="flex-1 overflow-hidden flex flex-col min-h-0">
             <CardHeader className="py-4 border-b shrink-0">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Taxonomy Tree ({data.nodes.length} root nodes)</CardTitle>
+                    <CardTitle className="text-base">
+                      Taxonomy Tree ({data.nodes.length} root nodes)
+                      {data.nodes.length === 0 && " — empty"}
+                    </CardTitle>
                     <div className="flex gap-2">
                         <Button
                             onClick={() => exportMutation.mutate({ format: 'csv' })}
@@ -165,11 +178,19 @@ export default function TaxonomyViewer() {
                 </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-2">
-                <div className="space-y-0.5">
+                {data.nodes.length === 0 ? (
+                  <Alert className="mt-4">
+                    <AlertDescription>
+                      No taxonomy data for target &quot;{targetId}&quot;. Run ingestion for this target in the Ingestion page, then select it here and click Load.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="space-y-0.5">
                     {data.nodes.map((node, idx) => (
                         <TreeNode key={idx} node={node} />
                     ))}
-                </div>
+                  </div>
+                )}
             </CardContent>
         </Card>
       )}

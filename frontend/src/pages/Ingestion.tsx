@@ -29,6 +29,7 @@ export default function Ingestion() {
   });
   const [promptTemplate, setPromptTemplate] = useState('');
   const [llmModel, setLlmModel] = useState('');
+  const [lastIngestionResult, setLastIngestionResult] = useState<{ l3_count: number; total_embeddings: number } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -62,9 +63,14 @@ export default function Ingestion() {
 
   const ingestMutation = useMutation({
     mutationFn: () => ingestTaxonomy(targetId, false),
-    onSuccess: () => {
+    onSuccess: (data: { l3_count?: number; total_embeddings?: number }) => {
+      setLastIngestionResult({
+        l3_count: data?.l3_count ?? 0,
+        total_embeddings: data?.total_embeddings ?? 0,
+      });
       setActiveStep(2);
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['target-ids'] });
     },
   });
 
@@ -270,6 +276,15 @@ export default function Ingestion() {
 
             {activeStep === 2 && (
                 <div className="space-y-4">
+                    {lastIngestionResult !== null && (
+                        <Alert variant={lastIngestionResult.l3_count === 0 ? "destructive" : "default"}>
+                            <AlertDescription>
+                                {lastIngestionResult.l3_count === 0
+                                    ? "No L3 categories were ingested. Check that your CSV has a valid L3 column and that the column mapping is correct. The taxonomy will not appear in the Taxonomy Viewer."
+                                    : `Ingested ${lastIngestionResult.l3_count} categories (${lastIngestionResult.total_embeddings} embedding components). Select "${targetId}" in the Taxonomy Viewer to see them.`}
+                            </AlertDescription>
+                        </Alert>
+                    )}
                     <div className="grid w-full gap-1.5">
                         <Label htmlFor="prompt">Prompt Template (Optional)</Label>
                         <Textarea 
