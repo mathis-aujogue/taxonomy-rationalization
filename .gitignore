@@ -13,3 +13,4 @@ assets/
 results/
 uploads/
 taxonomy_jobs.db
+.DS_Store

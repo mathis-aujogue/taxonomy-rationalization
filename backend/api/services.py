@@ -9,14 +9,10 @@ from sqlalchemy.orm import Session
 from lib.services import TaxonomyServices
 from .database import TaxonomyJob
 from .models import ColumnMapping, MatchResult, CandidateMatch, JobStatus
-from utils.data.data_loader import load_taxonomy_csv
-from ingest_taxonomy import extract_taxonomy_fields
 from ingest_hybrid_embeddings import ingest_hybrid_embeddings
 from .generate_descriptions_api import generate_descriptions_api
 from hybrid_matcher import HybridMatcher
-from utils.ai.content_builder import build_page_content
 from utils.config.constants import constants
-from langchain_core.documents import Document
 
 
 class TaxonomyService:
