@@ -14,6 +14,7 @@ from .models import (
     IngestRequest,
     AugmentRequest,
     MatchRequest,
+    MatchResult,
     MatchResponse,
     JobListResponse,
     JobInfo,
